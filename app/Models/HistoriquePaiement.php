@@ -29,4 +29,18 @@ class HistoriquePaiement extends Model
         return $this->belongsTo(User::class);
     }
     
+    protected static function booted()
+    {
+        static::creating(function ($historiquePaiement) {
+            $historiquePaiement->ref = (string) \Illuminate\Support\Str::uuid();
+        });
+
+        static::updating(function ($historiquePaiement) {
+            // Logique avant la mise à jour d'un historique de paiement
+        });
+
+        static::deleting(function ($historiquePaiement) {
+            // Logique avant la suppression d'un historique de paiement
+        });
+    }
 }
