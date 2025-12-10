@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('action'); // création, modification, annulation
             $table->text('details')->nullable();
             $table->foreignIdFor(User::class)->constrained();
+            $table->uuid('ref')->unique();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Paiement extends Model
 {
     /** @use HasFactory<\Database\Factories\PaiementFactory> */
-    use HasFactory;
+    use HasFactory, HasLogs, SoftDeletes;
     protected $fillable = [
         'eleve_id',
         'tranche_id',
@@ -21,36 +23,34 @@ class Paiement extends Model
         'date_paiement',
     ];
     protected static function boot()
+{
+    parent::boot();
+
+    // Appel du boot des traits
+    static::bootHasLogs();
+
+    static::creating(function ($paiement) {
+        $paiement->ref = (string) \Illuminate\Support\Str::uuid();
+    });
+}
+
+    public function eleve()
     {
-        parent::boot();
-
-        static::creating(function ($paiement) {
-            $paiement->ref = (string) \Illuminate\Support\Str::uuid();
-
-            HistoriquePaiement::create([
-                'paiement_id' => $paiement->id,
-                'action' => 'création',
-                'details' => 'Paiement créé avec la référence ' . $paiement->reference,
-                'user_id' => $paiement->user_id,
-            ]);
-        });
-
-        static::updating(function ($paiement) {
-            HistoriquePaiement::create([
-                'paiement_id' => $paiement->id,
-                'action' => 'modification',
-                'details' => 'Paiement modifié avec la référence ' . $paiement->reference,
-                'user_id' => $paiement->user_id,
-            ]);
-        });
-
-        static::deleting(function ($paiement) {
-            HistoriquePaiement::create([
-                'paiement_id' => $paiement->id,
-                'action' => 'annulation',
-                'details' => 'Paiement annulé avec la référence ' . $paiement->reference,
-                'user_id' => $paiement->user_id,
-            ]);
-        });
+        return $this->belongsTo(Eleve::class);
     }
+    public function tranche()
+    {
+        return $this->belongsTo(Tranche::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function historique_paiements()
+    {
+        return $this->hasMany(HistoriquePaiement::class);
+    }
+
+    
 }

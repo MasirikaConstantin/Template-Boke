@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class PaiementController extends Controller
 {
@@ -128,7 +129,7 @@ class PaiementController extends Controller
             ->orderBy('ordre')
             ->get();
 
-        return Inertia::render('Paiements/Create', [
+        return Inertia::render('Paiements/Form', [
             'eleves' => $eleves,
             'tranches' => $tranches,
             'reference' => 'PAY-' . strtoupper(Str::random(10)),
@@ -147,12 +148,13 @@ class PaiementController extends Controller
             'commentaire' => 'nullable|string',
             'date_paiement' => 'required|date',
         ]);
+        //dd($validated);
 
         DB::beginTransaction();
 
         try {
             $paiement = Paiement::create(array_merge($validated, [
-                'user_id' => auth()->id(),
+                'user_id' => Auth::user()->id,
             ]));
 
             // Enregistrer l'historique
@@ -162,9 +164,9 @@ class PaiementController extends Controller
                 'details' => json_encode([
                     'montant' => $paiement->montant,
                     'mode_paiement' => $paiement->mode_paiement,
-                    'par' => auth()->user()->name
+                    'par' => Auth::user()->name
                 ]),
-                'user_id' => auth()->id(),
+                'user_id' => Auth::user()->id,
             ]);
 
             DB::commit();
@@ -173,6 +175,7 @@ class PaiementController extends Controller
                 ->with('success', 'Paiement enregistré avec succès.');
 
         } catch (\Exception $e) {
+            dd($e->getMessage());
             DB::rollBack();
             return back()->withErrors(['error' => 'Une erreur est survenue lors de l\'enregistrement.']);
         }
@@ -199,7 +202,7 @@ class PaiementController extends Controller
             ->orderBy('ordre')
             ->get();
 
-        return Inertia::render('Paiements/Edit', [
+        return Inertia::render('Paiements/Form', [
             'paiement' => $paiement,
             'eleves' => $eleves,
             'tranches' => $tranches,

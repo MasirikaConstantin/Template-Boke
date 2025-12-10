@@ -37,12 +37,14 @@ import {
   UserCog,
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import classes from '@/routes/classes';
 import eleves from '@/routes/eleves';
 import configurationFrais from '@/routes/configuration-frais';
 import tranches from '@/routes/tranches';
+import paiements from '@/routes/paiements';
+import recouvrement from '@/routes/recouvrement';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -113,22 +115,32 @@ export function DashboardLayout({
       href: tranches.index().url,
       icon: <Calendar className="h-5 w-5" />,
     },
+    {
+      title: 'Paiements',
+      href: paiements.index().url,
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      title: 'Recouvrement',
+      href: recouvrement.index().url,
+      icon: <Shield className="h-5 w-5" />,
+    }
   ];
 
   const secondaryNavItems: NavItem[] = [
     {
       title: 'Paramètres',
-      href: '/dashboard/settings',
+      href: '#',
       icon: <Settings className="h-5 w-5" />,
     },
     {
       title: 'Support',
-      href: '/dashboard/support',
+      href: '#',
       icon: <HelpCircle className="h-5 w-5" />,
     },
     {
       title: 'Administration',
-      href: '/dashboard/admin',
+      href: '#',
       icon: <Shield className="h-5 w-5" />,
     },
   ];
@@ -137,6 +149,7 @@ export function DashboardLayout({
     return activeRoute === path || activeRoute.startsWith(`${path}/`);
   };
 
+  const user = usePage().props.auth.user;
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
@@ -207,7 +220,7 @@ export function DashboardLayout({
         <div className="flex-1">
           <h1 className="text-xl font-semibold">Tableau de bord</h1>
         </div>
-        <MobileUserDropdown />
+        <MobileUserDropdown user={user} />
       </header>
 
       {/* Desktop Layout */}
@@ -334,7 +347,7 @@ export function DashboardLayout({
                 <Bell className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
               </Button>
-              <DesktopUserDropdown />
+              <DesktopUserDropdown user={user} />
             </div>
           </header>
 
@@ -350,7 +363,7 @@ export function DashboardLayout({
   );
 }
 
-function DesktopUserDropdown() {
+function DesktopUserDropdown({user} : {user?: any}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -363,21 +376,21 @@ function DesktopUserDropdown() {
       <DropdownMenuContent className="w-56 bg-background " align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">John Doe</p>
+            <p className="text-sm font-medium leading-none">{user.name} </p>
             <p className="text-xs leading-none text-muted-foreground">
-              john@example.com
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/profile">
+          <Link href="#">
             <User className="mr-2 h-4 w-4" />
             <span>Profil</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings">
+          <Link href="#">
             <Settings className="mr-2 h-4 w-4" />
             <span>Paramètres</span>
           </Link>
@@ -394,7 +407,7 @@ function DesktopUserDropdown() {
   );
 }
 
-function MobileUserDropdown() {
+function MobileUserDropdown({user}: {user?: any}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -407,21 +420,21 @@ function MobileUserDropdown() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">John Doe</p>
+            <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              john@example.com
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/profile">
+          <Link href="#">
             <User className="mr-2 h-4 w-4" />
             <span>Profil</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings">
+          <Link href="#">
             <Settings className="mr-2 h-4 w-4" />
             <span>Paramètres</span>
           </Link>

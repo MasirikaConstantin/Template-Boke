@@ -25,6 +25,8 @@ return new class extends Migration
             $table->string('numero_cheque')->nullable();
             $table->text('commentaire')->nullable();
             $table->date('date_paiement');
+            $table->uuid('ref')->unique();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -7,6 +7,8 @@ use App\Http\Controllers\ConfigurationFraiController;
 use App\Http\Controllers\ConfigurationFraisController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EleveController;
+use App\Http\Controllers\PaiementController;
+use App\Http\Controllers\RecouvrementController;
 use App\Http\Controllers\TrancheController;
 use App\Models\ConfigurationFrai;
 use Illuminate\Support\Facades\Route;
@@ -74,4 +76,17 @@ Route::resource('eleves', EleveController::class);
     
     Route::get('/tranches/by-configuration/{configurationId}', [TrancheController::class, 'getByConfiguration'])
         ->name('tranches.by-configuration');
+Route::get('/paiements/rapport', [PaiementController::class, 'rapport'])
+        ->name('paiements.rapport');
+        Route::resource('paiements', PaiementController::class);
+    Route::post('/paiements/bulk-action', [PaiementController::class, 'bulkAction'])
+        ->name('paiements.bulk-action');
+    Route::get('/recouvrement', [RecouvrementController::class, 'index'])
+        ->name('recouvrement.index');
+    
+    Route::get('/recouvrement/generer-rapport', [RecouvrementController::class, 'genererRapport'])
+        ->name('recouvrement.generer-rapport');
+    
+    Route::post('/recouvrement/envoyer-rappels', [RecouvrementController::class, 'envoyerRappels'])
+        ->name('recouvrement.envoyer-rappels');
 });
