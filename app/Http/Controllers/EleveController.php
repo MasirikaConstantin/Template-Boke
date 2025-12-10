@@ -205,6 +205,8 @@ class EleveController extends Controller
             'eleve' => $eleve,
             'classes' => $classes,
             'nationalites' => [
+                'Congolaise DRC',
+                'Congolaise Braza',
                 'Sénégalais',
                 'Mauritanien',
                 'Malien',

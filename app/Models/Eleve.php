@@ -232,7 +232,7 @@ class Eleve extends Model
             $classe = $this->classe;
             $sequence = Eleve::whereYear('created_at', now()->year)->count() + 1;
             
-            $this->matricule = "EL{$annee}-{$classe->ref}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $this->matricule = "EL{$annee}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
         }
     }
 
