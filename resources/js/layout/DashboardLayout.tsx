@@ -149,7 +149,8 @@ export function DashboardLayout({
     return activeRoute === path || activeRoute.startsWith(`${path}/`);
   };
 
-  const user = usePage().props.auth.user;
+  const user = (usePage().props as any).auth.user;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
