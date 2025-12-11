@@ -144,42 +144,6 @@ const PrintDepense = React.forwardRef<HTMLDivElement, PrintDepenseProps>(
           </div>
         )}
 
-        {/* Historique des approbations */}
-        {depense.approbations && depense.approbations.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <h3>Historique des approbations</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f3f4f6' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #000' }}>Approbateur</th>
-                  <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #000' }}>Décision</th>
-                  <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #000' }}>Commentaire</th>
-                  <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #000' }}>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {depense.approbations.map((approbation) => (
-                  <tr key={approbation.id}>
-                    <td style={{ padding: '12px', borderBottom: '1px solid #ddd' }}>{approbation.user.name}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid #ddd' }}>
-                      <span style={{
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        backgroundColor: approbation.decision === 'approuve' ? '#d1fae5' : '#fee2e2',
-                        color: approbation.decision === 'approuve' ? '#065f46' : '#dc2626',
-                        fontWeight: 'bold'
-                      }}>
-                        {approbation.decision}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid #ddd' }}>{approbation.commentaire}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid #ddd' }}>{formatDate(approbation.created_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
 
         {/* Pied de page */}
         <div style={{

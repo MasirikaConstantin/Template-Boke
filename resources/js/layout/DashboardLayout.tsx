@@ -51,6 +51,7 @@ import recouvrement from '@/routes/recouvrement';
 import budgets from '@/routes/budgets';
 import depenses from '@/routes/depenses';
 import categoriesDepense from '@/routes/categories-depense';
+import caisse from '@/routes/caisse';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -124,6 +125,11 @@ export function DashboardLayout({
     {
       title: 'Caisse',
       href: paiements.index().url,
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      title: 'Rapport Caisse',
+      href: caisse.index().url,
       icon: <FileText className="h-5 w-5" />,
     },
     {

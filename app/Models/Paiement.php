@@ -33,7 +33,11 @@ class Paiement extends Model
         $paiement->ref = (string) \Illuminate\Support\Str::uuid();
     });
 }
-
+public function getNomCompletAttribute()
+{
+    $eleveNom = $this->eleve ? $this->eleve->nom_complet : 'Non spécifié';
+    return "Paiement #{$this->reference} - {$eleveNom}";
+}
     public function eleve()
     {
         return $this->belongsTo(Eleve::class);

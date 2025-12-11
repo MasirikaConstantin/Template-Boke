@@ -3,6 +3,7 @@
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\CaisseController;
 use App\Http\Controllers\CategorieDepenseController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\ConfigurationFraiController;
@@ -109,4 +110,11 @@ Route::get('/paiements/rapport', [PaiementController::class, 'rapport'])
         ->name('depenses.approuver');
     Route::post('/depenses/{depense}/marquer-comme-paye', [DepenseController::class, 'marquerCommePaye'])
         ->name('depenses.marquer-comme-paye');
+
+         Route::get('/caisse', [CaisseController::class, 'index'])->name('caisse.index');
+    Route::get('/caisse/export', [CaisseController::class, 'export'])->name('caisse.export');
+    
+    // Routes supplémentaires si besoin
+    Route::get('/caisse/solde', [CaisseController::class, 'solde'])->name('caisse.solde');
+    Route::post('/caisse/fermeture', [CaisseController::class, 'fermeture'])->name('caisse.fermeture');
 });

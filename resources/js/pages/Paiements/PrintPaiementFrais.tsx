@@ -40,7 +40,7 @@ interface PaiementFraisData {
     };
   }>;
 }
-
+import writtenNumber from 'written-number';
 interface PrintPaiementFraisProps {
   paiement: PaiementFraisData;
 }
@@ -67,6 +67,7 @@ const PrintPaiementFrais = React.forwardRef<HTMLDivElement, PrintPaiementFraisPr
         return { details };
       }
     };
+
 
     return (
       <div ref={ref} style={{ 
@@ -319,8 +320,9 @@ const PrintPaiementFrais = React.forwardRef<HTMLDivElement, PrintPaiementFraisPr
             <strong>Arrêtée la présente quittance à la somme de:</strong><br/>
             <span style={{ fontSize: '11pt', textTransform: 'uppercase' }}>
               {/* Vous pouvez ajouter une fonction de conversion nombre → lettres ici */}
-              {formatMontant(paiement.montant).replace('$US', 'USD')} 
-              {/* Soit: "Trente mille F" si vous implémentez la conversion */}
+
+              {formatMontant(paiement.montant).replace('$US', 'USD') + " Soit " + writtenNumber(parseFloat(paiement.montant), { lang: 'fr' }) + " dollars"}
+              
             </span>
           </p>
         </div>

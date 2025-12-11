@@ -81,7 +81,10 @@ class Depense extends Model
     {
         return $this->hasMany(ApprobationDepense::class);
     }
-
+public function getNomCompletAttribute()
+{
+    return "Dépense #{$this->reference} - {$this->libelle}";
+}
     public function getStatutBadgeAttribute()
     {
         $badges = [
