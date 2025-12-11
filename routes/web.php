@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BudgetController;
@@ -8,7 +9,6 @@ use App\Http\Controllers\CategorieDepenseController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\ConfigurationFraiController;
 use App\Http\Controllers\ConfigurationFraisController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\EleveController;
 use App\Http\Controllers\PaiementController;
@@ -117,4 +117,13 @@ Route::get('/paiements/rapport', [PaiementController::class, 'rapport'])
     // Routes supplémentaires si besoin
     Route::get('/caisse/solde', [CaisseController::class, 'solde'])->name('caisse.solde');
     Route::post('/caisse/fermeture', [CaisseController::class, 'fermeture'])->name('caisse.fermeture');
+});
+
+Route::prefix('api/v1')->group(function () {
+    // Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'index']);
+    
+    // Vous pouvez ajouter plus d'endpoints spécifiques
+    Route::get('/dashboard/activities', [DashboardController::class, 'activities']);
+    Route::get('/dashboard/chart-data', [DashboardController::class, 'chartData']);
 });
