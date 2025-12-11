@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Depense;
 use Illuminate\Support\ServiceProvider;
+use App\Observers\DepenseObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,5 +38,7 @@ class AppServiceProvider extends ServiceProvider
             copy($sourcePath, $destPath);
         }
     }
+
+        Depense::observe(DepenseObserver::class);
 }
 }

@@ -2,10 +2,13 @@
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\CategorieDepenseController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\ConfigurationFraiController;
 use App\Http\Controllers\ConfigurationFraisController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\EleveController;
 use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\RecouvrementController;
@@ -89,4 +92,21 @@ Route::get('/paiements/rapport', [PaiementController::class, 'rapport'])
     
     Route::post('/recouvrement/envoyer-rappels', [RecouvrementController::class, 'envoyerRappels'])
         ->name('recouvrement.envoyer-rappels');
+
+            // Budgets
+    Route::resource('budgets', BudgetController::class);
+    Route::post('/budgets/{budget}/dupliquer', [BudgetController::class, 'dupliquer'])
+        ->name('budgets.dupliquer');
+
+    // Catégories de dépenses
+    Route::resource('categories-depense', CategorieDepenseController::class)->except(['show', 'edit', 'create']);
+    Route::get('/categories-depense', [CategorieDepenseController::class, 'index'])
+        ->name('categories-depense.index');
+
+    // Dépenses
+    Route::resource('depenses', DepenseController::class);
+    Route::post('/depenses/{depense}/approuver', [DepenseController::class, 'approuver'])
+        ->name('depenses.approuver');
+    Route::post('/depenses/{depense}/marquer-comme-paye', [DepenseController::class, 'marquerCommePaye'])
+        ->name('depenses.marquer-comme-paye');
 });

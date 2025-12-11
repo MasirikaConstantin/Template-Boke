@@ -121,7 +121,7 @@ export default function ConfigurationFraisForm({ auth, frai, flash }: Configurat
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="montant_total">Montant total (CDF) *</Label>
+                    <Label htmlFor="montant_total">Montant total (USD) *</Label>
                     <Input
                       id="montant_total"
                       type="number"

@@ -88,8 +88,8 @@ export default function PaiementsRapport({
   const formatMontant = (montant: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'CDF',
-    }).format(montant);
+      currency: 'USD',
+    }).format(montant).replace('$US', '$');
   };
 
   const formatDate = (dateString: string) => {
@@ -333,7 +333,7 @@ export default function PaiementsRapport({
                       <YAxis 
                         stroke="#6b7280"
                         fontSize={12}
-                        tickFormatter={(value) => formatMontant(value).replace(' CDF', 'K')}
+                        tickFormatter={(value) => formatMontant(value).replace('$US', 'K')}
                       />
                       <Tooltip 
                         formatter={(value) => [formatMontant(Number(value)), 'Montant']}

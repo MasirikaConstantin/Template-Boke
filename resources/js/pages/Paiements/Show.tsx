@@ -92,8 +92,8 @@ export default function PaiementShow({ auth, paiement }: PaiementShowProps) {
   const formatMontant = (montant: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'CDF',
-    }).format(montant);
+      currency: 'USD',
+    }).format(montant).replace('$US', '$');
   };
 
   const getModePaiementBadge = (mode: string) => {

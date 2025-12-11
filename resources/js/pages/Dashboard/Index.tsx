@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/layout/DashboardLayout';
 import { PageHeader } from '@/layout/PageHeader';
+import DashboardActivity from './DashboardActivity';
 
 interface DashboardProps {
   activeRoute?: string;
@@ -26,8 +27,9 @@ export default function Dashboard({ activeRoute = '/dashboard', stats }: Dashboa
       />
       
       {/* Contenu du dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="">
         {/* Cartes de statistiques */}
+        <DashboardActivity/>
       </div>
     </DashboardLayout>
   );

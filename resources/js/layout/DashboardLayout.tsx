@@ -35,6 +35,9 @@ import {
   CreditCard,
   Shield,
   UserCog,
+  DollarSign,
+  BookCheckIcon,
+  BookAIcon,
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Link, usePage } from '@inertiajs/react';
@@ -45,6 +48,9 @@ import configurationFrais from '@/routes/configuration-frais';
 import tranches from '@/routes/tranches';
 import paiements from '@/routes/paiements';
 import recouvrement from '@/routes/recouvrement';
+import budgets from '@/routes/budgets';
+import depenses from '@/routes/depenses';
+import categoriesDepense from '@/routes/categories-depense';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -124,6 +130,21 @@ export function DashboardLayout({
       title: 'Recouvrement',
       href: recouvrement.index().url,
       icon: <Shield className="h-5 w-5" />,
+    },
+    {
+      title : 'Budgets',
+      href : budgets.index().url,
+      icon : <DollarSign className="h-5 w-5" />,
+    },
+    {
+      title: 'Categories Depenses',
+      href: categoriesDepense.index().url,
+      icon: <BookAIcon className="h-5 w-5" />,
+    },
+    {
+      title: 'Depenses',
+      href: depenses.index().url,
+      icon: <BookCheckIcon className="h-5 w-5" />,
     }
   ];
 

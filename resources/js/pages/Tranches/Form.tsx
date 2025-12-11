@@ -72,8 +72,8 @@ export default function TrancheForm({ auth, tranche, configurations, flash }: Tr
   const formatMontant = (montant: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'CDF',
-    }).format(montant);
+      currency: 'USD',
+    }).format(montant).replace('$US', '$');
   };
 
   return (
@@ -189,7 +189,7 @@ export default function TrancheForm({ auth, tranche, configurations, flash }: Tr
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="montant">Montant (CDF) *</Label>
+                      <Label htmlFor="montant">Montant (USD) *</Label>
                       <Input
                         id="montant"
                         type="number"

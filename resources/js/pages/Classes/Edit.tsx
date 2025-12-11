@@ -116,7 +116,6 @@ export default function EditClasse({ classe, professeurs, sections }: EditClasse
     const statutObj = statuts.find(s => s.value === statut);
     return statutObj?.color || 'default';
   };
-console.log(classe)
   return (
     <>
       <Head title={`Modifier ${classe.nom_classe}`} />

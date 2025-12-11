@@ -16,7 +16,7 @@ return new class extends Migration
             $table->date('date_naissance');
             $table->enum('sexe', ['M', 'F']);
             $table->string('lieu_naissance')->nullable();
-            $table->string('nationalite')->default('Sénégalais');
+            $table->string('nationalite')->default('Congolaise DRC');
             $table->string('adresse')->nullable();
             $table->string('telephone')->nullable();
             $table->string('email')->nullable()->unique();

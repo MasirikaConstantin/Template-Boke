@@ -206,8 +206,8 @@ export default function RecouvrementIndex({
   const formatMontant = (montant: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'CDF',
-    }).format(montant);
+      currency: 'USD',
+    }).format(montant).replace('$US', '$');
   };
 
   const formatDate = (dateString: string) => {
