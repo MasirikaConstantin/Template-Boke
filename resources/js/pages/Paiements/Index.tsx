@@ -236,7 +236,6 @@ export default function PaiementsIndex({
       </Badge>
     );
   };
-
   return (
     <>
       <Head title="Gestion des paiements" />

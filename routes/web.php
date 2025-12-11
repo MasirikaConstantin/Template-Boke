@@ -99,7 +99,7 @@ Route::get('/paiements/rapport', [PaiementController::class, 'rapport'])
         ->name('budgets.dupliquer');
 
     // Catégories de dépenses
-    Route::resource('categories-depense', CategorieDepenseController::class)->except(['show', 'edit', 'create']);
+    Route::resource('categories-depense', CategorieDepenseController::class);
     Route::get('/categories-depense', [CategorieDepenseController::class, 'index'])
         ->name('categories-depense.index');
 

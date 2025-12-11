@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  ArrowLeft, 
-  Edit, 
-  Calendar, 
-  DollarSign, 
+import {
+  ArrowLeft,
+  Edit,
+  Calendar,
+  DollarSign,
   Wallet,
   Folder,
   User,
@@ -22,6 +22,8 @@ import {
   TrendingDown,
 } from 'lucide-react';
 import { DashboardLayout } from '@/layout/DashboardLayout';
+import { useReactToPrint } from 'react-to-print';
+import PrintDepense from './PrintDepense';
 
 interface Approbation {
   id: number;
@@ -119,7 +121,7 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
     };
 
     const badge = badges[decision] || { variant: 'secondary' as const, label: 'Inconnu' };
-    
+
     return (
       <Badge variant={badge.variant}>
         {badge.label}
@@ -141,22 +143,19 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
       router.post(`/depenses/${depense.id}/marquer-comme-paye`);
     }
   };
-    const componentRef = useRef<HTMLDivElement>(null);
-// 2. Configurez la fonction d'impression
+  const printRef = useRef<HTMLDivElement>(null);
+
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: printRef,   // nouvelle API
     documentTitle: `Depense_${depense.reference}`,
-    pageStyle: `
-      @media print {
-        @page { size: A4; margin: 20mm; }
-        body { -webkit-print-color-adjust: exact; }
-      }
-    `,
   });
+
+
+
   return (
     <>
       <Head title={`Dépense: ${depense.reference}`} />
-      
+
       <DashboardLayout activeRoute="/depenses">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -167,14 +166,11 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimer
               </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Télécharger
-              </Button>
+
               <Link href="/depenses">
                 <Button variant="outline" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -378,7 +374,7 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
                                 {depense.fichier_joint.split('/').pop()}
                               </div>
                             </div>
-                            <a 
+                            <a
                               href={`/storage/${depense.fichier_joint}`}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -470,7 +466,7 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
                           Modifier cette dépense
                         </Button>
                       </Link>
-                      
+
                       {depense.budget && (
                         <Link href={`/budgets/${depense.budget.id}`} className="block">
                           <Button variant="outline" className="w-full justify-start">
@@ -547,6 +543,11 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
             </TabsContent>
           </Tabs>
         </div>
+        <div style={{ display: 'none' }}>
+          <PrintDepense ref={printRef} depense={depense} />
+        </div>
+
+
       </DashboardLayout>
     </>
   );

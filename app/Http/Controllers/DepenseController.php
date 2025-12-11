@@ -195,7 +195,7 @@ class DepenseController extends Controller
 
             DB::commit();
 
-            return redirect()->route('depenses.index')
+            return redirect()->route('depenses.show', $depense->id)
                 ->with('success', 'Dépense créée avec succès.');
 
         } catch (\Exception $e) {
@@ -310,7 +310,7 @@ class DepenseController extends Controller
 
             DB::commit();
 
-            return redirect()->route('depenses.index')
+            return redirect()->route('depenses.show', $depense->id)
                 ->with('success', 'Dépense mise à jour avec succès.');
 
         } catch (\Exception $e) {

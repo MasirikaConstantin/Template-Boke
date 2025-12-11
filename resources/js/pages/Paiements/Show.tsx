@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,8 @@ import {
   UserCircle
 } from 'lucide-react';
 import { DashboardLayout } from '@/layout/DashboardLayout';
+import { useReactToPrint } from 'react-to-print';
+import PrintPaiementFrais from './PrintPaiementFrais';
 
 interface Eleve {
   id: number;
@@ -120,6 +122,14 @@ export default function PaiementShow({ auth, paiement }: PaiementShowProps) {
     }
   };
 
+  const printRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrint = useReactToPrint({
+      contentRef: printRef,   // nouvelle API
+      documentTitle: `Quittance_${paiement.reference}_${paiement.eleve.nom_complet}`,
+
+  });
+  
   return (
     <>
       <Head title={`Détails: ${paiement.reference}`} />
@@ -134,14 +144,11 @@ export default function PaiementShow({ auth, paiement }: PaiementShowProps) {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimer
               </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Télécharger
-              </Button>
+              
               <Link href="/paiements">
                 <Button variant="outline" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -469,6 +476,10 @@ export default function PaiementShow({ auth, paiement }: PaiementShowProps) {
               </Card>
             </TabsContent>
           </Tabs>
+
+           <div style={{ display: 'none' }}>
+          <PrintPaiementFrais ref={printRef} paiement={paiement} />
+        </div>
         </div>
       </DashboardLayout>
     </>

@@ -45,7 +45,7 @@ const PrintDepense = React.forwardRef<HTMLDivElement, PrintDepenseProps>(
 
     return (
       // Styles inline pour garantir qu'ils s'appliquent à l'impression
-      <div ref={ref} style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <div ref={ref} style={{ padding: '20px', fontFamily: 'Arial, sans-serif',backgroundColor: '#fff', color: '#000' }}>
         {/* En-tête */}
         <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '2px solid #000', paddingBottom: '10px' }}>
           <h1 style={{ margin: 0 }}>Fiche de Dépense</h1>

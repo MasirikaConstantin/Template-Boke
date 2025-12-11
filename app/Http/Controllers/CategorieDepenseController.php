@@ -27,7 +27,10 @@ class CategorieDepenseController extends Controller
             'filters' => $request->only(['search', 'per_page']),
         ]);
     }
-
+ public function create()
+    {
+        return Inertia::render('CategoriesDepense/Form');
+    }
    public function store(Request $request)
     {
         $request->validate([
@@ -53,8 +56,9 @@ class CategorieDepenseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(CategorieDepense $categorieDepense)
+    public function show(string $categorieDepense)
     {
+        $categorieDepense = CategorieDepense::withTrashed()->findOrFail($categorieDepense);
         $stats = [
             'total_depenses' => $categorieDepense->depenses()->count(),
             'montant_total' => $categorieDepense->depenses()->sum('montant'),

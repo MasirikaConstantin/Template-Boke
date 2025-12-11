@@ -27,6 +27,7 @@ import {
 import { Pagination } from '@/components/ui/pagination';
 import { DashboardLayout } from '@/layout/DashboardLayout';
 import { PageHeader } from '@/layout/PageHeader';
+import categoriesDepense from '@/routes/categories-depense';
 
 interface CategorieDepense {
   id: number;
@@ -129,7 +130,7 @@ export default function CategoriesDepenseIndex({
     <>
       <Head title="Catégories de dépenses" />
       
-      <DashboardLayout activeRoute="/budgets">
+      <DashboardLayout activeRoute="/categories-depense" auth={auth}>
         <PageHeader
           title="Catégories de dépenses"
           description={`${categories.total} catégories`}
@@ -139,22 +140,12 @@ export default function CategoriesDepenseIndex({
             { label: 'Catégories', href: '/categories-depense' },
           ]}
           actions={
-            <Button onClick={() => {
-              // Modal pour créer une catégorie
-              const nom = prompt('Nom de la catégorie:');
-              const code = prompt('Code:');
-              
-              if (nom && code) {
-                router.post('/categories-depense', {
-                  nom_categorie: nom,
-                  code: code,
-                  description: prompt('Description (optionnelle):') || '',
-                });
-              }
-            }}>
+            <Link href={categoriesDepense.create().url}>
+              <Button>
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle catégorie
             </Button>
+            </Link>
           }
         />
 

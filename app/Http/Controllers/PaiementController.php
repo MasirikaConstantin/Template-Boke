@@ -171,11 +171,11 @@ class PaiementController extends Controller
 
             DB::commit();
 
-            return redirect()->route('paiements.index')
+            return redirect()->route('paiements.show', $paiement->id)
                 ->with('success', 'Paiement enregistré avec succès.');
 
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            
             DB::rollBack();
             return back()->withErrors(['error' => 'Une erreur est survenue lors de l\'enregistrement.']);
         }
@@ -183,7 +183,7 @@ class PaiementController extends Controller
 
     public function show(Paiement $paiement)
     {
-        $paiement->load(['eleve', 'tranche', 'user', 'historique_paiements.user']);
+        $paiement->load(['eleve.classe', 'tranche', 'user', 'historique_paiements.user']);
 
         return Inertia::render('Paiements/Show', [
             'paiement' => $paiement,
@@ -243,7 +243,7 @@ class PaiementController extends Controller
 
             DB::commit();
 
-            return redirect()->route('paiements.index')
+            return redirect()->route('paiements.show', $paiement->id)
                 ->with('success', 'Paiement modifié avec succès.');
 
         } catch (\Exception $e) {

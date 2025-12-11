@@ -122,7 +122,7 @@ export function DashboardLayout({
       icon: <Calendar className="h-5 w-5" />,
     },
     {
-      title: 'Paiements',
+      title: 'Caisse',
       href: paiements.index().url,
       icon: <FileText className="h-5 w-5" />,
     },

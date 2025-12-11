@@ -245,14 +245,14 @@ export default function CategorieDepenseShow({ auth, categorie, stats, flash }: 
               <CardHeader>
                 <CardTitle>Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Link href={`/depenses?categorie_id=${categorie.id}`} className="w-full">
+              <CardContent className="space-y-4 gap-2">
+                <Link href={`/depenses?categorie_id=${categorie.id}`} className="w-full mb-2">
                   <Button variant="outline" className="w-full justify-start">
                     <FileText className="h-4 w-4 mr-2" />
                     Voir les dépenses
                   </Button>
                 </Link>
-                <Link href={`/depenses/create?categorie_id=${categorie.id}`} className="w-full">
+                <Link href={`/depenses/create?categorie_id=${categorie.id}`} className="w-full mt-6">
                   <Button variant="outline" className="w-full justify-start">
                     <Plus className="h-4 w-4 mr-2" />
                     Nouvelle dépense

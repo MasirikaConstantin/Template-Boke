@@ -84,7 +84,7 @@ export default function CategorieDepenseForm({ auth, categorie, flash }: Categor
     <>
       <Head title={title} />
       
-      <DashboardLayout activeRoute="/budgets">
+      <DashboardLayout activeRoute="/categories-depense" >
         <PageHeader
           title={title}
           description={isEdit ? 'Modifier les informations de la catégorie' : 'Créer une nouvelle catégorie de dépense'}
