@@ -188,10 +188,10 @@ export function DashboardLayout({
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[280px]">
-            <div className="flex flex-col h-full">
-              <div className="flex h-16 items-center border-b px-6">
-                <Link href="/" className="flex items-center gap-2">
+          <SheetContent side="left" className="p-0 w-[380px]">
+            <div className="flex flex-col h-100%">  
+              <div className="flex h-26 items-center border-b p-6">
+                <Link href="/" className="flex items-center gap-2 p-2">
                   <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                     <span className="font-bold text-primary-foreground">L</span>
                   </div>
@@ -261,7 +261,7 @@ export function DashboardLayout({
           )}
         >
           {/* Sidebar Header */}
-          <div className="flex h-16 items-center border-b px-4">
+          <div className="flex h-36 items-center border-b px-4 p-4">
             <Link
               href="/"
               className={cn(

@@ -169,6 +169,7 @@ interface ShowEleveProps {
     absences: Absence[];
     paiements: Paiement[];
     logs: UserLog[];
+    historique_paiements: Paiement[];
   };
 }
 
@@ -233,7 +234,6 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
       default: return 'Autre';
     }
   };
-
   return (
     <>
       <Head title={eleve.nom_complet} />
@@ -606,6 +606,44 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                       </CardContent>
                     </Card>
                   )}
+
+                  {eleve.historique_paiements && ( 
+                    <Card className="md:col-span-2">
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium">Historique des paiements</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {eleve.historique_paiements.length === 0 ? (
+                            <p className="text-center text-muted-foreground py-4">
+                              Aucun paiement enregistré
+                            </p>
+                          ) : (
+                            <div className="space-y-3"> 
+                              {eleve.historique_paiements.map((paiement) => (
+                                <div key={paiement.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                  <div>
+                                    <p className="font-medium">{paiement.reference}</p>
+                                    <p className="text-xs text-muted-foreground"> {paiement.tranche.nom_tranche} </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDate(paiement.date_paiement)}  
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-lg font-bold">
+                                      {Number(paiement.montant).toFixed(2)} $
+                                    </p>
+                                    <Badge variant='default'>
+                                      Effectué
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                          )}
+                        </CardContent>
+                    </Card>
+                  )}
                 </div>
               </TabsContent>
 
@@ -691,7 +729,7 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center p-4 border rounded-lg">
-                          <p className="text-2xl font-bold">{eleve.moyenne_generale?.toFixed(2) || 'N/A'}</p>
+                          <p className="text-2xl font-bold">{Number(eleve.moyenne_generale)?.toFixed(2) || 'N/A'}</p>
                           <p className="text-sm text-muted-foreground">Moyenne générale</p>
                         </div>
                         
@@ -919,7 +957,7 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                     </CardContent>
                   </Card>
 
-                  {/* Historique des classes */}
+                  {/* Historique des classes 
                   {eleve.historique_classes && eleve.historique_classes.length > 0 && (
                     <Card>
                       <CardHeader>
@@ -940,7 +978,9 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                         </div>
                       </CardContent>
                     </Card>
-                  )}
+                  )}*/}
+
+
                 </div>
               </TabsContent>
             </Tabs>

@@ -167,6 +167,8 @@ class EleveController extends Controller
             'classe.professeurPrincipal:id,name,email',
             'createdBy:id,name,email',
             'updatedBy:id,name,email',
+            'historiquePaiements.user',
+            'historiquePaiements.tranche',
             'notes' => function ($q) {
                 $q->with('matiere:id,nom,coefficient')
                   ->orderBy('created_at', 'desc')

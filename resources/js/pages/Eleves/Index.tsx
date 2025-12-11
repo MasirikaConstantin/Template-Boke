@@ -514,10 +514,10 @@ export default function ElevesIndex({
                       <TableCell>
                         {eleve.moyenne_generale ? (
                           <div className="flex items-center gap-2">
-                            <div className={`text-lg font-bold ${getMoyenneColor(eleve.moyenne_generale)}`}>
-                              {eleve.moyenne_generale.toFixed(2)}
+                            <div className={`text-lg font-bold ${getMoyenneColor(Number(eleve.moyenne_generale))}`}>
+                              {Number(eleve.moyenne_generale).toFixed(2)}
                             </div>
-                            {eleve.moyenne_generale >= 15 && (
+                            {Number(eleve.moyenne_generale) >= 15 && (
                               <TrendingUp className="h-4 w-4 text-green-500" />
                             )}
                           </div>

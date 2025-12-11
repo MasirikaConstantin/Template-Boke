@@ -338,4 +338,8 @@ class Eleve extends Model
             }
         });
     }
+    public function historiquePaiements()
+    {
+        return $this->hasMany(Paiement::class);
+    }
 }
