@@ -36,6 +36,8 @@ import {
   Calendar,
   MapPin,
   Briefcase,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 import { DashboardLayout } from '@/layout/DashboardLayout';
 import { PageHeader } from '@/layout/PageHeader';
@@ -50,30 +52,47 @@ interface CreateEleveProps {
   nationalites: string[];
 }
 
+
+interface Classe {
+  id: number;
+  nom_classe: string;
+  niveau: string;
+  section?: string;
+  code_classe?: string;
+}
+
+interface Nationalite {
+  value: string;
+  label: string;
+}
+
+
+
+interface ResponsableForm {
+  nom: string;
+  prenom: string;
+  type_responsable: 'pere' | 'mere' | 'tuteur' | 'autre';
+  telephone_1: string;
+  email: string;
+  profession: string;
+  adresse: string;
+}
+
 export default function CreateEleve({ classes, nationalites }: CreateEleveProps) {
   const { data, setData, post, processing, errors, reset } = useForm({
     // Identité
     nom: '',
     prenom: '',
     date_naissance: '',
-    sexe: 'M',
+    sexe: 'M' as 'M' | 'F',
     lieu_naissance: '',
-    nationalite: 'Sénégalais',
+    nationalite: 'Congolaise RDC',
     adresse: '',
     telephone: '',
     email: '',
     
-    // Parents
-    nom_pere: '',
-    profession_pere: '',
-    telephone_pere: '',
-    nom_mere: '',
-    profession_mere: '',
-    telephone_mere: '',
-    nom_tuteur: '',
-    profession_tuteur: '',
-    telephone_tuteur: '',
-    adresse_tuteur: '',
+    // Responsables
+    responsables: [] as ResponsableForm[],
     
     // Scolarité
     classe_id: '',
@@ -90,14 +109,14 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
     telephone_medecin: '',
     
     // Transport
-    moyen_transport: 'marche',
+    moyen_transport: 'marche' as 'marche' | 'bus' | 'voiture' | 'taxi' | 'autre',
     nom_transporteur: '',
     telephone_transporteur: '',
     
     // Observations
     observations: '',
     
-    // Documents (fichiers)
+    // Documents
     photo: null as File | null,
     certificat_naissance: null as File | null,
     bulletin_precedent: null as File | null,
@@ -107,37 +126,72 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
 
   const [activeTab, setActiveTab] = useState('identite');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    
-    // Ajouter tous les champs textuels
-    Object.keys(data).forEach(key => {
-      if (key !== 'photo' && key !== 'certificat_naissance' && key !== 'bulletin_precedent' && 
-          key !== 'certificat_medical' && key !== 'autorisation_parentale') {
-        formData.append(key, (data as any)[key]);
-      }
-    });
-    
-    // Ajouter les fichiers
-    if (data.photo) formData.append('photo', data.photo);
-    if (data.certificat_naissance) formData.append('certificat_naissance', data.certificat_naissance);
-    if (data.bulletin_precedent) formData.append('bulletin_precedent', data.bulletin_precedent);
-    if (data.certificat_medical) formData.append('certificat_medical', data.certificat_medical);
-    if (data.autorisation_parentale) formData.append('autorisation_parentale', data.autorisation_parentale);
-    
-    post('/eleves', {
-      data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
+  // Ajouter un responsable
+  const addResponsable = () => {
+    setData('responsables', [
+      ...data.responsables,
+      {
+        nom: '',
+        prenom: '',
+        type_responsable: 'tuteur',
+        telephone_1: '',
+        email: '',
+        profession: '',
+        adresse: '',
       },
-    });
+    ]);
   };
-
-  const handleFileChange = (field: string, file: File | null) => {
+ const handleFileChange = (field: string, file: File | null) => {
     setData(field as any, file);
   };
+  const niveauxTransport = [
+    { value: 'marche', label: 'À pied' },
+    { value: 'bus', label: 'Bus scolaire' },
+    { value: 'voiture', label: 'Voiture personnelle' },
+    { value: 'taxi', label: 'Taxi' },
+    { value: 'autre', label: 'Autre' },
+  ];
+  // Supprimer un responsable
+  const removeResponsable = (index: number) => {
+    const updated = [...data.responsables];
+    updated.splice(index, 1);
+    setData('responsables', updated);
+  };
+
+  // Mettre à jour un responsable
+  const updateResponsable = (index: number, field: keyof ResponsableForm, value: string) => {
+    const updated = [...data.responsables];
+    updated[index] = { ...updated[index], [field]: value };
+    setData('responsables', updated);
+  };
+
+ const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const formData = new FormData();
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+
+    if (value instanceof File) {
+      formData.append(key, value);
+    } 
+    else if (Array.isArray(value)) {
+      formData.append(key, JSON.stringify(value));
+    }
+    else if (typeof value === 'boolean') {
+      formData.append(key, value ? '1' : '0');
+    }
+    else {
+      formData.append(key, String(value));
+    }
+  });
+
+  post('/eleves', {
+    data: formData,
+  });
+};
+
 
   const calculateAge = () => {
     if (!data.date_naissance) return null;
@@ -151,14 +205,20 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
     return age;
   };
 
-  const niveauxTransport = [
+  const typesResponsable = [
+    { value: 'pere', label: 'Père' },
+    { value: 'mere', label: 'Mère' },
+    { value: 'tuteur', label: 'Tuteur' },
+    { value: 'autre', label: 'Autre' },
+  ];
+
+  const moyensTransport = [
     { value: 'marche', label: 'À pied' },
     { value: 'bus', label: 'Bus scolaire' },
     { value: 'voiture', label: 'Voiture personnelle' },
     { value: 'taxi', label: 'Taxi' },
     { value: 'autre', label: 'Autre' },
   ];
-
   return (
     <>
       <Head title="Inscrire un nouvel élève" />
@@ -194,11 +254,11 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Messages d'erreur */}
-              {(errors.nom || errors.prenom || errors.date_naissance) && (
+              {Object.keys(errors).length > 0 && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    {errors.nom || errors.prenom || errors.date_naissance}
+                    Veuillez corriger les erreurs dans le formulaire
                   </AlertDescription>
                 </Alert>
               )}
@@ -209,9 +269,9 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                     <User className="h-4 w-4" />
                     Identité
                   </TabsTrigger>
-                  <TabsTrigger value="parents" className="flex items-center gap-2">
+                  <TabsTrigger value="responsables" className="flex items-center gap-2">
                     <Home className="h-4 w-4" />
-                    Parents
+                    Responsables
                   </TabsTrigger>
                   <TabsTrigger value="scolarite" className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4" />
@@ -241,9 +301,7 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                         required
                         autoFocus
                       />
-                      {errors.nom && (
-                        <p className="text-sm text-destructive">{errors.nom}</p>
-                      )}
+                      {errors.nom && <p className="text-sm text-destructive">{errors.nom}</p>}
                     </div>
 
                     {/* Prénom */}
@@ -256,9 +314,7 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                         placeholder="Jean"
                         required
                       />
-                      {errors.prenom && (
-                        <p className="text-sm text-destructive">{errors.prenom}</p>
-                      )}
+                      {errors.prenom && <p className="text-sm text-destructive">{errors.prenom}</p>}
                     </div>
 
                     {/* Date de naissance */}
@@ -276,13 +332,9 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                         />
                       </div>
                       {data.date_naissance && (
-                        <p className="text-sm text-muted-foreground">
-                          Âge: {calculateAge()} ans
-                        </p>
+                        <p className="text-sm text-muted-foreground">Âge: {calculateAge()} ans</p>
                       )}
-                      {errors.date_naissance && (
-                        <p className="text-sm text-destructive">{errors.date_naissance}</p>
-                      )}
+                      {errors.date_naissance && <p className="text-sm text-destructive">{errors.date_naissance}</p>}
                     </div>
 
                     {/* Sexe */}
@@ -296,12 +348,11 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                             name="sexe"
                             value="M"
                             checked={data.sexe === 'M'}
-                            onChange={e => setData('sexe', e.target.value)}
+                            onChange={e => setData('sexe', e.target.value as 'M' | 'F')}
                             className="h-4 w-4"
                           />
                           <Label htmlFor="sexe_m" className="flex items-center gap-2">
-                            <span>👦</span>
-                            Masculin
+                            <span>👦</span> Masculin
                           </Label>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -311,18 +362,15 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                             name="sexe"
                             value="F"
                             checked={data.sexe === 'F'}
-                            onChange={e => setData('sexe', e.target.value)}
+                            onChange={e => setData('sexe', e.target.value as 'M' | 'F')}
                             className="h-4 w-4"
                           />
                           <Label htmlFor="sexe_f" className="flex items-center gap-2">
-                            <span>👧</span>
-                            Féminin
+                            <span>👧</span> Féminin
                           </Label>
                         </div>
                       </div>
-                      {errors.sexe && (
-                        <p className="text-sm text-destructive">{errors.sexe}</p>
-                      )}
+                      {errors.sexe && <p className="text-sm text-destructive">{errors.sexe}</p>}
                     </div>
 
                     {/* Lieu de naissance */}
@@ -338,9 +386,7 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                           className="pl-10"
                         />
                       </div>
-                      {errors.lieu_naissance && (
-                        <p className="text-sm text-destructive">{errors.lieu_naissance}</p>
-                      )}
+                      {errors.lieu_naissance && <p className="text-sm text-destructive">{errors.lieu_naissance}</p>}
                     </div>
 
                     {/* Nationalité */}
@@ -355,15 +401,13 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                         </SelectTrigger>
                         <SelectContent>
                           {nationalites.map((nationalite) => (
-                            <SelectItem key={nationalite} value={nationalite}>
-                              {nationalite}
+                            <SelectItem key={nationalite.value} value={nationalite.value}>
+                              {nationalite.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.nationalite && (
-                        <p className="text-sm text-destructive">{errors.nationalite}</p>
-                      )}
+                      {errors.nationalite && <p className="text-sm text-destructive">{errors.nationalite}</p>}
                     </div>
 
                     {/* Adresse */}
@@ -380,9 +424,7 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                           rows={2}
                         />
                       </div>
-                      {errors.adresse && (
-                        <p className="text-sm text-destructive">{errors.adresse}</p>
-                      )}
+                      {errors.adresse && <p className="text-sm text-destructive">{errors.adresse}</p>}
                     </div>
 
                     {/* Téléphone */}
@@ -398,9 +440,7 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                           className="pl-10"
                         />
                       </div>
-                      {errors.telephone && (
-                        <p className="text-sm text-destructive">{errors.telephone}</p>
-                      )}
+                      {errors.telephone && <p className="text-sm text-destructive">{errors.telephone}</p>}
                     </div>
 
                     {/* Email */}
@@ -417,150 +457,158 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                           className="pl-10"
                         />
                       </div>
-                      {errors.email && (
-                        <p className="text-sm text-destructive">{errors.email}</p>
-                      )}
+                      {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                   </div>
                 </TabsContent>
 
-                {/* Onglet Parents */}
-                <TabsContent value="parents" className="space-y-6 pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Père */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Père</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="nom_pere">Nom complet</Label>
-                          <Input
-                            id="nom_pere"
-                            value={data.nom_pere}
-                            onChange={e => setData('nom_pere', e.target.value)}
-                            placeholder="Nom du père"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="profession_pere">Profession</Label>
-                          <div className="relative">
-                            <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              id="profession_pere"
-                              value={data.profession_pere}
-                              onChange={e => setData('profession_pere', e.target.value)}
-                              placeholder="Profession"
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="telephone_pere">Téléphone</Label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              id="telephone_pere"
-                              value={data.telephone_pere}
-                              onChange={e => setData('telephone_pere', e.target.value)}
-                              placeholder="77 123 45 67"
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                {/* Onglet Responsables */}
+                <TabsContent value="responsables" className="space-y-6 pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Responsables légaux</Label>
+                      <Button type="button" onClick={addResponsable} size="sm" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un responsable
+                      </Button>
+                    </div>
+                    
+                    {data.responsables.length === 0 ? (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                        <p className="text-muted-foreground">Aucun responsable ajouté</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Cliquez sur "Ajouter un responsable" pour commencer
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {data.responsables.map((responsable, index) => (
+                          <Card key={index} className="relative">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-sm font-medium">
+                                  Responsable {index + 1}
+                                  {index === 0 && (
+                                    <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                                      Principal
+                                    </span>
+                                  )}
+                                </CardTitle>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeResponsable(index)}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Type de responsable */}
+                                <div className="space-y-2">
+                                  <Label>Type de responsable</Label>
+                                  <Select
+                                    value={responsable.type_responsable}
+                                    onValueChange={(value) => updateResponsable(index, 'type_responsable', value as any)}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Sélectionner" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {typesResponsable.map((type) => (
+                                        <SelectItem key={type.value} value={type.value}>
+                                          {type.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
 
-                    {/* Mère */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Mère</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="nom_mere">Nom complet</Label>
-                          <Input
-                            id="nom_mere"
-                            value={data.nom_mere}
-                            onChange={e => setData('nom_mere', e.target.value)}
-                            placeholder="Nom de la mère"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="profession_mere">Profession</Label>
-                          <div className="relative">
-                            <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              id="profession_mere"
-                              value={data.profession_mere}
-                              onChange={e => setData('profession_mere', e.target.value)}
-                              placeholder="Profession"
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="telephone_mere">Téléphone</Label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              id="telephone_mere"
-                              value={data.telephone_mere}
-                              onChange={e => setData('telephone_mere', e.target.value)}
-                              placeholder="77 123 45 67"
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                                {/* Nom */}
+                                <div className="space-y-2">
+                                  <Label>Nom *</Label>
+                                  <Input
+                                    value={responsable.nom}
+                                    onChange={(e) => updateResponsable(index, 'nom', e.target.value)}
+                                    placeholder="Nom"
+                                    required
+                                  />
+                                </div>
 
-                    {/* Tuteur */}
-                    <Card className="md:col-span-2">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Tuteur (si différent des parents)</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="nom_tuteur">Nom complet</Label>
-                            <Input
-                              id="nom_tuteur"
-                              value={data.nom_tuteur}
-                              onChange={e => setData('nom_tuteur', e.target.value)}
-                              placeholder="Nom du tuteur"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="profession_tuteur">Profession</Label>
-                            <Input
-                              id="profession_tuteur"
-                              value={data.profession_tuteur}
-                              onChange={e => setData('profession_tuteur', e.target.value)}
-                              placeholder="Profession"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="telephone_tuteur">Téléphone</Label>
-                            <Input
-                              id="telephone_tuteur"
-                              value={data.telephone_tuteur}
-                              onChange={e => setData('telephone_tuteur', e.target.value)}
-                              placeholder="77 123 45 67"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="adresse_tuteur">Adresse</Label>
-                            <Input
-                              id="adresse_tuteur"
-                              value={data.adresse_tuteur}
-                              onChange={e => setData('adresse_tuteur', e.target.value)}
-                              placeholder="Adresse du tuteur"
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                                {/* Prénom */}
+                                <div className="space-y-2">
+                                  <Label>Prénom *</Label>
+                                  <Input
+                                    value={responsable.prenom}
+                                    onChange={(e) => updateResponsable(index, 'prenom', e.target.value)}
+                                    placeholder="Prénom"
+                                    required
+                                  />
+                                </div>
+
+                                {/* Téléphone */}
+                                <div className="space-y-2">
+                                  <Label>Téléphone *</Label>
+                                  <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      value={responsable.telephone_1}
+                                      onChange={(e) => updateResponsable(index, 'telephone_1', e.target.value)}
+                                      placeholder="77 123 45 67"
+                                      required
+                                      className="pl-10"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Email */}
+                                <div className="space-y-2">
+                                  <Label>Email</Label>
+                                  <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      type="email"
+                                      value={responsable.email}
+                                      onChange={(e) => updateResponsable(index, 'email', e.target.value)}
+                                      placeholder="email@exemple.com"
+                                      className="pl-10"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Profession */}
+                                <div className="space-y-2">
+                                  <Label>Profession</Label>
+                                  <div className="relative">
+                                    <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      value={responsable.profession}
+                                      onChange={(e) => updateResponsable(index, 'profession', e.target.value)}
+                                      placeholder="Profession"
+                                      className="pl-10"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Adresse */}
+                                <div className="space-y-2 md:col-span-2">
+                                  <Label>Adresse</Label>
+                                  <Textarea
+                                    value={responsable.adresse}
+                                    onChange={(e) => updateResponsable(index, 'adresse', e.target.value)}
+                                    placeholder="Adresse complète"
+                                    rows={2}
+                                  />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
 
@@ -848,10 +896,10 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
                 </TabsContent>
               </Tabs>
 
-              {/* Navigation entre onglets */}
+              {/* Navigation et boutons d'action */}
               <div className="flex items-center justify-between pt-6 border-t">
                 <div className="flex gap-2">
-                  {['identite', 'parents', 'scolarite', 'sante', 'documents'].map((tab, index) => (
+                  {['identite', 'responsables', 'scolarite', 'sante', 'documents'].map((tab, index) => (
                     <button
                       key={tab}
                       type="button"

@@ -111,6 +111,10 @@ export function DashboardLayout({
       title: 'Élèves',
       href: eleves.index().url,
       icon: <UserCog className="h-5 w-5" />,
+    },{
+      title: 'Responsables',
+      href: '/responsables',
+      icon: <Users className="h-5 w-5" />,
     },
     {
       title: 'Configurations de frais',

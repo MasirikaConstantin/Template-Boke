@@ -29,4 +29,8 @@ class Tranche extends Model
     {
         return $this->belongsTo(ConfigurationFrai::class, 'configuration_frai_id');
     }
+    public function configurationFrais()
+    {
+        return $this->belongsTo(ConfigurationFrai::class, 'configuration_frai_id');
+    }
 }

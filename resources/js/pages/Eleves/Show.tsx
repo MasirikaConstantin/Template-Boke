@@ -28,47 +28,48 @@ import {
   Briefcase,
   Stethoscope,
   Eye,
+  BanknoteIcon,
+  CreditCard,
+  DollarSign,
+  UserCheck,
+  AlertCircle,
 } from 'lucide-react';
 import { DashboardLayout } from '@/layout/DashboardLayout';
 import { PageHeader } from '@/layout/PageHeader';
 
-interface Note {
+interface Responsable {
   id: number;
-  valeur: number;
-  type: string;
-  date_evaluation: string;
-  matiere: {
-    id: number;
-    nom: string;
-    coefficient: number;
+  nom: string;
+  prenom: string;
+  nom_complet: string;
+  type_responsable: string;
+  profession: string | null;
+  telephone_1: string;
+  email: string | null;
+  adresse: string | null;
+  pivot: {
+    eleve_id: number;
+    responsable_id: number;
+    est_responsable_financier: number;
+    est_contact_urgence: number;
+    est_autorise_retirer: number;
+    ordre_priorite: number;
+    telephone_urgence: string | null;
   };
-}
-
-interface Absence {
-  id: number;
-  date: string;
-  motif: string;
-  justifiee: boolean;
+  eleves: any[];
 }
 
 interface Paiement {
   id: number;
+  reference?: string;
   montant: number;
-  type: string;
   date_paiement: string;
   statut: string;
-}
-
-interface UserLog {
-  id: number;
-  action: string;
-  action_label: string;
-  description: string;
-  created_at: string;
-  user: {
+  user?: any;
+  tranche?: {
     id: number;
-    name: string;
-  } | null;
+    nom_tranche: string;
+  };
 }
 
 interface ShowEleveProps {
@@ -88,17 +89,9 @@ interface ShowEleveProps {
     telephone: string | null;
     email: string | null;
     
-    // Parents
-    nom_pere: string | null;
-    profession_pere: string | null;
-    telephone_pere: string | null;
-    nom_mere: string | null;
-    profession_mere: string | null;
-    telephone_mere: string | null;
-    nom_tuteur: string | null;
-    profession_tuteur: string | null;
-    telephone_tuteur: string | null;
-    adresse_tuteur: string | null;
+    // Nouvelle structure : Responsables
+    responsables: Responsable[];
+    responsable_principal: Responsable | null;
     
     // Scolarité
     classe: {
@@ -139,15 +132,12 @@ interface ShowEleveProps {
     telephone_transporteur: string | null;
     
     // Documents
-    photo_url: string;
+    photo: string | null;
     certificat_naissance: string | null;
-    bulletin_precedent: string | null;
     certificat_medical: string | null;
-    autorisation_parentale: string | null;
     
     // Historique
-    historique_classes: any[] | null;
-    historique_notes: any[] | null;
+    historique_paiements: Paiement[];
     
     // Système
     ref: string;
@@ -163,17 +153,11 @@ interface ShowEleveProps {
       name: string;
       email: string;
     } | null;
-    
-    // Relations chargées
-    notes: Note[];
-    absences: Absence[];
-    paiements: Paiement[];
-    logs: UserLog[];
-    historique_paiements: Paiement[];
   };
+  fraternites: any[];
 }
 
-export default function ShowEleve({ eleve }: ShowEleveProps) {
+export default function ShowEleve({ eleve, fraternites }: ShowEleveProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -181,7 +165,6 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
       year: 'numeric',
     });
   };
-
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -234,6 +217,21 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
       default: return 'Autre';
     }
   };
+
+  const getTypeResponsableLabel = (type: string) => {
+    switch (type) {
+      case 'pere': return 'Père';
+      case 'mere': return 'Mère';
+      case 'tuteur': return 'Tuteur';
+      default: return 'Autre';
+    }
+  };
+
+  const getPhotoUrl = (photo: string | null) => {
+    if (!photo) return null;
+    return photo.startsWith('http') ? photo : `/storage/${photo}`;
+  };
+
   return (
     <>
       <Head title={eleve.nom_complet} />
@@ -279,7 +277,10 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <Avatar className="h-32 w-32 border-4 border-background">
-                    <AvatarImage src={eleve.photo_url} alt={eleve.nom_complet} />
+                    <AvatarImage 
+                      src={getPhotoUrl(eleve.photo)} 
+                      alt={eleve.nom_complet} 
+                    />
                     <AvatarFallback className={`text-3xl ${eleve.sexe === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}`}>
                       {eleve.nom.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -445,104 +446,27 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                   <User className="h-4 w-4" />
                   Informations
                 </TabsTrigger>
-                <TabsTrigger value="scolarite" className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Scolarité
+                <TabsTrigger value="responsables" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Responsables
+                </TabsTrigger>
+                <TabsTrigger value="paiements" className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Paiements
                 </TabsTrigger>
                 <TabsTrigger value="sante" className="flex items-center gap-2">
                   <Heart className="h-4 w-4" />
                   Santé
-                </TabsTrigger>
-                <TabsTrigger value="activite" className="flex items-center gap-2">
-                  <History className="h-4 w-4" />
-                  Activité
                 </TabsTrigger>
               </TabsList>
 
               {/* Onglet Informations */}
               <TabsContent value="informations" className="space-y-6 pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Parents */}
+                  {/* Informations personnelles */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-sm font-medium">Parents</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {eleve.nom_pere && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Père</p>
-                          <div className="space-y-1">
-                            <p className="font-medium">{eleve.nom_pere}</p>
-                            {eleve.profession_pere && (
-                              <p className="text-sm flex items-center gap-1">
-                                <Briefcase className="h-3 w-3" />
-                                {eleve.profession_pere}
-                              </p>
-                            )}
-                            {eleve.telephone_pere && (
-                              <p className="text-sm flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                {eleve.telephone_pere}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {eleve.nom_mere && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Mère</p>
-                          <div className="space-y-1">
-                            <p className="font-medium">{eleve.nom_mere}</p>
-                            {eleve.profession_mere && (
-                              <p className="text-sm flex items-center gap-1">
-                                <Briefcase className="h-3 w-3" />
-                                {eleve.profession_mere}
-                              </p>
-                            )}
-                            {eleve.telephone_mere && (
-                              <p className="text-sm flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                {eleve.telephone_mere}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {eleve.nom_tuteur && (
-                        <div className="pt-4 border-t">
-                          <p className="text-sm text-muted-foreground">Tuteur</p>
-                          <div className="space-y-1">
-                            <p className="font-medium">{eleve.nom_tuteur}</p>
-                            {eleve.profession_tuteur && (
-                              <p className="text-sm">
-                                <Briefcase className="h-3 w-3 inline mr-1" />
-                                {eleve.profession_tuteur}
-                              </p>
-                            )}
-                            {eleve.telephone_tuteur && (
-                              <p className="text-sm">
-                                <Phone className="h-3 w-3 inline mr-1" />
-                                {eleve.telephone_tuteur}
-                              </p>
-                            )}
-                            {eleve.adresse_tuteur && (
-                              <p className="text-sm">
-                                <Home className="h-3 w-3 inline mr-1" />
-                                {eleve.adresse_tuteur}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Adresse et contact */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm font-medium">Adresse et contact</CardTitle>
+                      <CardTitle className="text-sm font-medium">Informations personnelles</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {eleve.adresse && (
@@ -595,6 +519,34 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                     </CardContent>
                   </Card>
 
+                  {/* Fraterie */}
+                  {fraternites && fraternites.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium">Frères et sœurs</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {fraternites.map((frere) => (
+                            <div key={frere.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <p className="font-medium">{frere.nom_complet}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {frere.classe?.nom_classe} • {frere.age} ans
+                                </p>
+                              </div>
+                              <Link href={`/eleves/${frere.id}`}>
+                                <Button size="sm" variant="ghost">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Observations */}
                   {eleve.observations && (
                     <Card className="md:col-span-2">
@@ -606,155 +558,232 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                       </CardContent>
                     </Card>
                   )}
-
-                  {eleve.historique_paiements && ( 
-                    <Card className="md:col-span-2">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Historique des paiements</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {eleve.historique_paiements.length === 0 ? (
-                            <p className="text-center text-muted-foreground py-4">
-                              Aucun paiement enregistré
-                            </p>
-                          ) : (
-                            <div className="space-y-3"> 
-                              {eleve.historique_paiements.map((paiement) => (
-                                <div key={paiement.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                  <div>
-                                    <p className="font-medium">{paiement.reference}</p>
-                                    <p className="text-xs text-muted-foreground"> {paiement.tranche.nom_tranche} </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatDate(paiement.date_paiement)}  
-                                    </p>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-lg font-bold">
-                                      {Number(paiement.montant).toFixed(2)} $
-                                    </p>
-                                    <Badge variant='default'>
-                                      Effectué
-                                    </Badge>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                          )}
-                        </CardContent>
-                    </Card>
-                  )}
                 </div>
               </TabsContent>
 
-              {/* Onglet Scolarité */}
-              <TabsContent value="scolarite" className="space-y-6 pt-6">
+              {/* Onglet Responsables */}
+              <TabsContent value="responsables" className="space-y-6 pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Notes récentes */}
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle className="text-sm font-medium">Notes récentes</CardTitle>
-                      <Badge variant="outline">
-                        {eleve.notes.length} note(s)
-                      </Badge>
-                    </CardHeader>
-                    <CardContent>
-                      {eleve.notes.length === 0 ? (
-                        <p className="text-center text-muted-foreground py-4">
-                          Aucune note enregistrée
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          {eleve.notes.map((note) => (
-                            <div key={note.id} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div>
-                                <p className="font-medium">{note.matiere.nom}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {note.type} • {formatDate(note.date_evaluation)}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className={`text-lg font-bold ${getMoyenneColor(note.valeur)}`}>
-                                  {note.valeur.toFixed(2)}/20
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Coef: {note.matiere.coefficient}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Absences */}
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle className="text-sm font-medium">Absences</CardTitle>
-                      <Badge variant="outline">
-                        {eleve.absences.length} absence(s)
-                      </Badge>
-                    </CardHeader>
-                    <CardContent>
-                      {eleve.absences.length === 0 ? (
-                        <p className="text-center text-muted-foreground py-4">
-                          Aucune absence enregistrée
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          {eleve.absences.map((absence) => (
-                            <div key={absence.id} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div>
-                                <p className="font-medium">{formatDate(absence.date)}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {absence.motif}
-                                </p>
-                              </div>
-                              <Badge variant={absence.justifiee ? 'outline' : 'destructive'}>
-                                {absence.justifiee ? 'Justifiée' : 'Non justifiée'}
+                  {eleve.responsables.map((responsable, index) => (
+                    <Card key={responsable.id}>
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span>{getTypeResponsableLabel(responsable.type_responsable)}</span>
+                            {responsable.pivot.est_responsable_financier && (
+                              <Badge variant="default" className="text-xs">
+                                <BanknoteIcon className="h-3 w-3 mr-1" />
+                                Financier
                               </Badge>
+                            )}
+                            {responsable.pivot.est_contact_urgence && (
+                              <Badge variant="secondary" className="text-xs">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Urgence
+                              </Badge>
+                            )}
+                          </div>
+                          {index === 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              Principal
+                            </Badge>
+                          )}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Nom complet</p>
+                            <p className="font-medium">{responsable.nom_complet || `${responsable.nom} ${responsable.prenom}`}</p>
+                          </div>
+                          
+                          <div>
+                            <p className="text-sm text-muted-foreground">Téléphone</p>
+                            <p className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              {responsable.telephone_1}
+                            </p>
+                          </div>
+                          
+                          {responsable.email && (
+                            <div>
+                              <p className="text-sm text-muted-foreground">Email</p>
+                              <p className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                {responsable.email}
+                              </p>
                             </div>
-                          ))}
+                          )}
+                          
+                          {responsable.profession && (
+                            <div>
+                              <p className="text-sm text-muted-foreground">Profession</p>
+                              <p className="flex items-center gap-2">
+                                <Briefcase className="h-4 w-4 text-muted-foreground" />
+                                {responsable.profession}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {responsable.adresse && (
+                            <div>
+                              <p className="text-sm text-muted-foreground">Adresse</p>
+                              <p className="flex items-center gap-2">
+                                <Home className="h-4 w-4 text-muted-foreground" />
+                                {responsable.adresse}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Statistiques */}
+                        
+                        <div className="pt-4 border-t">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Priorité</p>
+                              <p className="text-sm font-medium">#{responsable.pivot.ordre_priorite}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Autorisé à retirer</p>
+                              <p className="text-sm font-medium">
+                                {responsable.pivot.est_autorise_retirer ? 'Oui' : 'Non'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Autres enfants du même responsable */}
+                        {responsable.eleves && responsable.eleves.length > 0 && (
+                          <div className="pt-4 border-t">
+                            <p className="text-xs text-muted-foreground mb-2">Autres enfants</p>
+                            <div className="space-y-2">
+                              {responsable.eleves.map((enfant) => (
+                                <div key={enfant.id} className="flex items-center justify-between text-sm">
+                                  <span>{enfant.nom_complet}</span>
+                                  <Link href={`/eleves/${enfant.id}`}>
+                                    <Button size="sm" variant="ghost" className="h-6 px-2">
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                  </Link>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {/* Statistiques des responsables */}
                   <Card className="md:col-span-2">
                     <CardHeader>
-                      <CardTitle className="text-sm font-medium">Statistiques scolaires</CardTitle>
+                      <CardTitle className="text-sm font-medium">Statistiques des responsables</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center p-4 border rounded-lg">
-                          <p className="text-2xl font-bold">{Number(eleve.moyenne_generale)?.toFixed(2) || 'N/A'}</p>
-                          <p className="text-sm text-muted-foreground">Moyenne générale</p>
-                        </div>
-                        
-                        <div className="text-center p-4 border rounded-lg">
-                          <p className="text-2xl font-bold">{eleve.rang_classe || 'N/A'}</p>
-                          <p className="text-sm text-muted-foreground">Rang dans la classe</p>
-                        </div>
-                        
-                        <div className="text-center p-4 border rounded-lg">
-                          <p className="text-2xl font-bold">{eleve.notes.length}</p>
-                          <p className="text-sm text-muted-foreground">Notes enregistrées</p>
+                          <p className="text-2xl font-bold">{eleve.responsables.length}</p>
+                          <p className="text-sm text-muted-foreground">Responsables</p>
                         </div>
                         
                         <div className="text-center p-4 border rounded-lg">
                           <p className="text-2xl font-bold">
-                            {eleve.redoublant ? 'Oui' : 'Non'}
+                            {eleve.responsables.filter(r => r.pivot.est_responsable_financier).length}
                           </p>
-                          <p className="text-sm text-muted-foreground">Redoublant</p>
-                          {eleve.annee_redoublement && (
-                            <p className="text-xs text-muted-foreground">
-                              Depuis {eleve.annee_redoublement}
-                            </p>
-                          )}
+                          <p className="text-sm text-muted-foreground">Financiers</p>
+                        </div>
+                        
+                        <div className="text-center p-4 border rounded-lg">
+                          <p className="text-2xl font-bold">
+                            {eleve.responsables.filter(r => r.pivot.est_contact_urgence).length}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Urgence</p>
+                        </div>
+                        
+                        <div className="text-center p-4 border rounded-lg">
+                          <p className="text-2xl font-bold">
+                            {eleve.responsables.filter(r => r.pivot.est_autorise_retirer).length}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Peut retirer</p>
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Onglet Paiements */}
+              <TabsContent value="paiements" className="space-y-6 pt-6">
+                <div className="grid grid-cols-1 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium">Historique des paiements</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!eleve.historique_paiements || eleve.historique_paiements.length === 0 ? (
+                        <div className="text-center py-8">
+                          <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                          <p className="text-muted-foreground">Aucun paiement enregistré</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Les paiements apparaîtront ici lorsqu'ils seront effectués
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {eleve.historique_paiements.map((paiement) => (
+                            <div key={paiement.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <DollarSign className="h-4 w-4 text-primary" />
+                                  <p className="font-medium">{paiement.reference || `PAI-${paiement.id}`}</p>
+                                  <Badge variant={paiement.statut === 'complet' ? 'default' : 'outline'}>
+                                    {paiement.statut === 'complet' ? 'Complet' : 'Partiel'}
+                                  </Badge>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  {paiement.tranche && (
+                                    <p className="text-sm">
+                                      <span className="text-muted-foreground">Tranche:</span>{' '}
+                                      <span className="font-medium">{paiement.tranche.nom_tranche}</span>
+                                    </p>
+                                  )}
+                                  
+                                  <p className="text-sm">
+                                    <span className="text-muted-foreground">Date:</span>{' '}
+                                    {formatDate(paiement.date_paiement)}
+                                  </p>
+                                  
+                                  {paiement.user && (
+                                    <p className="text-sm">
+                                      <span className="text-muted-foreground">Enregistré par:</span>{' '}
+                                      {paiement.user.name}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="text-right">
+                                <p className="text-2xl font-bold text-green-600">
+                                  {Number(paiement.montant).toLocaleString('fr-FR')} CDF
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Paiement effectué
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {/* Total */}
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-accent/50">
+                            <p className="font-medium">Total payé</p>
+                            <p className="text-2xl font-bold text-green-600">
+                              {eleve.historique_paiements
+                                .reduce((total, paiement) => total + Number(paiement.montant), 0)
+                                .toLocaleString('fr-FR')} CDF
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -816,9 +845,10 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                           )}
                         </div>
                       ) : (
-                        <p className="text-center text-muted-foreground py-4">
-                          Aucun médecin renseigné
-                        </p>
+                        <div className="text-center py-8">
+                          <Stethoscope className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                          <p className="text-muted-foreground">Aucun médecin renseigné</p>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
@@ -831,17 +861,18 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {eleve.certificat_medical ? (
-                          <div className="border rounded-lg p-4 flex items-center justify-between">
+                          <div className="border rounded-lg p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
                             <div className="flex items-center gap-3">
                               <FileText className="h-5 w-5 text-primary" />
                               <div>
                                 <p className="font-medium">Certificat médical</p>
-                                <p className="text-sm text-muted-foreground">Document médical</p>
+                                <p className="text-sm text-muted-foreground">Document médical à jour</p>
                               </div>
                             </div>
                             <a 
                               href={`/storage/${eleve.certificat_medical}`} 
                               target="_blank"
+                              rel="noopener noreferrer"
                               className="text-primary hover:underline text-sm"
                             >
                               Télécharger
@@ -849,12 +880,13 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                           </div>
                         ) : (
                           <div className="border rounded-lg p-4 text-center text-muted-foreground">
+                            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                             <p>Certificat médical non fourni</p>
                           </div>
                         )}
                         
                         {eleve.certificat_naissance ? (
-                          <div className="border rounded-lg p-4 flex items-center justify-between">
+                          <div className="border rounded-lg p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
                             <div className="flex items-center gap-3">
                               <FileText className="h-5 w-5 text-primary" />
                               <div>
@@ -865,6 +897,7 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                             <a 
                               href={`/storage/${eleve.certificat_naissance}`} 
                               target="_blank"
+                              rel="noopener noreferrer"
                               className="text-primary hover:underline text-sm"
                             >
                               Télécharger
@@ -872,115 +905,13 @@ export default function ShowEleve({ eleve }: ShowEleveProps) {
                           </div>
                         ) : (
                           <div className="border rounded-lg p-4 text-center text-muted-foreground">
+                            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                             <p>Certificat de naissance non fourni</p>
                           </div>
                         )}
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-              </TabsContent>
-
-              {/* Onglet Activité */}
-              <TabsContent value="activite" className="space-y-6 pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Historique d'activité */}
-                  <Card className="md:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="text-sm font-medium">Journal d'activité</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {eleve.logs.length === 0 ? (
-                        <p className="text-center text-muted-foreground py-4">
-                          Aucune activité enregistrée
-                        </p>
-                      ) : (
-                        <div className="space-y-4">
-                          {eleve.logs.map((log) => (
-                            <div key={log.id} className="flex items-start gap-3 pb-4 border-b last:border-0 last:pb-0">
-                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                <History className="h-4 w-4 text-primary" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium">
-                                    {log.user?.name || 'Système'}
-                                  </p>
-                                  <span className="text-xs text-muted-foreground">
-                                    {formatDateTime(log.created_at)}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {log.description}
-                                </p>
-                                <Badge variant="outline" className="mt-2 text-xs">
-                                  {log.action_label}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Informations système */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm font-medium">Informations système</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Référence</p>
-                        <p className="font-mono text-sm">{eleve.ref}</p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-muted-foreground">Créé le</p>
-                        <p className="text-sm">{formatDateTime(eleve.created_at)}</p>
-                        {eleve.created_by && (
-                          <p className="text-xs text-muted-foreground">
-                            Par {eleve.created_by.name}
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-muted-foreground">Dernière modification</p>
-                        <p className="text-sm">{formatDateTime(eleve.updated_at)}</p>
-                        {eleve.updated_by && (
-                          <p className="text-xs text-muted-foreground">
-                            Par {eleve.updated_by.name}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Historique des classes 
-                  {eleve.historique_classes && eleve.historique_classes.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Historique des classes</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {eleve.historique_classes.map((historique, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div>
-                                <p className="font-medium">{historique.classe_nom}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatDate(historique.date_entree)} - {formatDate(historique.date_sortie)}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}*/}
-
-
                 </div>
               </TabsContent>
             </Tabs>

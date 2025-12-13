@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Eleve;
 use App\Models\Classe;
+use App\Models\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class EleveController extends Controller
 {
@@ -64,28 +66,34 @@ class EleveController extends Controller
 
     public function create()
     {
-        $classes = Classe::active()->select('id', 'nom_classe', 'niveau', 'section')->get();
-        
+        $classes = Classe::active()
+            ->select('id', 'nom_classe', 'niveau', 'section')
+            ->get();
+
         return Inertia::render('Eleves/Create', [
             'classes' => $classes,
             'nationalites' => [
-                'Sénégalais',
-                'Mauritanien',
-                'Malien',
-                'Guinéen',
-                'Ivoirien',
-                'Burkinabé',
-                'Nigerien',
-                'Togolais',
-                'Béninois',
-                'Autre',
+                ['label' => 'Congolaise RDC', 'value' => 'Congolaise RDC'],
+                ['label' => 'Congolaise Brazza', 'value' => 'Congolaise Brazza'],
+                ['label' => 'Sénégalaise', 'value' => 'Sénégalaise'],
+                ['label' => 'Mauritanienne', 'value' => 'Mauritanienne'],
+                ['label' => 'Malienne', 'value' => 'Malienne'],
+                ['label' => 'Guinéenne', 'value' => 'Guinéenne'],
+                ['label' => 'Ivoirienne', 'value' => 'Ivoirienne'],
+                ['label' => 'Burkinabè', 'value' => 'Burkinabè'],
+                ['label' => 'Nigérienne', 'value' => 'Nigérienne'],
+                ['label' => 'Togolaise', 'value' => 'Togolaise'],
+                ['label' => 'Béninoise', 'value' => 'Béninoise'],
+                ['label' => 'Autre', 'value' => 'Autre'],
             ],
         ]);
     }
 
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Validation des données de l'élève
+        $validatedEleve = $request->validate([
             // Identité
             'nom' => 'required|string|max:100',
             'prenom' => 'required|string|max:100',
@@ -96,45 +104,43 @@ class EleveController extends Controller
             'adresse' => 'nullable|string|max:255',
             'telephone' => 'nullable|string|max:20',
             'email' => 'nullable|email|unique:eleves,email',
-            
-            // Parents
-            'nom_pere' => 'nullable|string|max:100',
-            'profession_pere' => 'nullable|string|max:100',
-            'telephone_pere' => 'nullable|string|max:20',
-            'nom_mere' => 'nullable|string|max:100',
-            'profession_mere' => 'nullable|string|max:100',
-            'telephone_mere' => 'nullable|string|max:20',
-            'nom_tuteur' => 'nullable|string|max:100',
-            'profession_tuteur' => 'nullable|string|max:100',
-            'telephone_tuteur' => 'nullable|string|max:20',
-            'adresse_tuteur' => 'nullable|string|max:255',
-            
+
+            // Responsables (données brutes)
+            'responsables' => 'nullable|array',
+            'responsables.*.nom' => 'required_with:responsables|string|max:100',
+            'responsables.*.prenom' => 'required_with:responsables|string|max:100',
+            'responsables.*.type_responsable' => 'required_with:responsables|in:pere,mere,tuteur,autre',
+            'responsables.*.telephone_1' => 'required_with:responsables|string|max:20',
+            'responsables.*.email' => 'nullable|email',
+            'responsables.*.profession' => 'nullable|string|max:100',
+            'responsables.*.adresse' => 'nullable|string|max:255',
+
             // Scolarité
             'classe_id' => 'required|exists:classes,id',
-            'redoublant' => 'boolean',
+            'redoublant' => 'nullable|boolean',
             'annee_redoublement' => 'nullable|integer|min:2000|max:' . now()->year,
             'derniere_ecole' => 'nullable|string|max:200',
             'derniere_classe' => 'nullable|string|max:50',
-            
+
             // Santé
             'antecedents_medicaux' => 'nullable|string',
             'groupe_sanguin' => 'nullable|string|max:5',
             'allergies' => 'nullable|string',
             'medecin_traitant' => 'nullable|string|max:100',
             'telephone_medecin' => 'nullable|string|max:20',
-            
+
             // Transport
             'moyen_transport' => 'nullable|in:marche,bus,voiture,taxi,autre',
             'nom_transporteur' => 'nullable|string|max:100',
             'telephone_transporteur' => 'nullable|string|max:20',
-            
-            // Documents (fichiers)
+
+            // Documents
             'photo' => 'nullable|image|max:2048',
             'certificat_naissance' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'bulletin_precedent' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'certificat_medical' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'autorisation_parentale' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
-            
+
             // Observations
             'observations' => 'nullable|string|max:500',
         ]);
@@ -143,49 +149,109 @@ class EleveController extends Controller
         $fileFields = ['photo', 'certificat_naissance', 'bulletin_precedent', 'certificat_medical', 'autorisation_parentale'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
-                $validated[$field] = $request->file($field)->store("eleves/{$field}", 'public');
+                $validatedEleve[$field] = $request->file($field)->store("eleves/{$field}", 'public');
             }
         }
 
-        // Date d'inscription par défaut
-        $validated['date_inscription'] = now();
-        $validated['statut'] = 'actif';
-        $validated['created_by'] = auth()->id();
+        // Générer le matricule
+        $classe = Classe::find($validatedEleve['classe_id']);
+        $annee = now()->format('y');
+        $sequence = Eleve::where('classe_id', $validatedEleve['classe_id'])->count() + 1;
+        $validatedEleve['matricule'] = sprintf(
+            '%s%s%04d',
+            $classe->code_classe ?? 'ELV',
+            $annee,
+            $sequence
+        );
 
-        $eleve = Eleve::create($validated);
+        // Données système
+        $validatedEleve['date_inscription'] = now();
+        $validatedEleve['statut'] = 'actif';
+        $validatedEleve['ref'] = (string) Str::uuid();
+        $validatedEleve['created_by'] = auth()->id();
+
+        // Créer l'élève
+        $eleve = Eleve::create($validatedEleve);
+
+        // Gérer les responsables
+        if ($request->has('responsables')) {
+            foreach ($request->input('responsables') as $index => $responsableData) {
+                // Chercher ou créer le responsable
+                $responsable = Responsable::firstOrCreate(
+                    [
+                        'telephone_1' => $responsableData['telephone_1'],
+                        'email' => $responsableData['email'] ?? null,
+                    ],
+                    [
+                        'nom' => $responsableData['nom'],
+                        'prenom' => $responsableData['prenom'],
+                        'type_responsable' => $responsableData['type_responsable'],
+                        'profession' => $responsableData['profession'] ?? null,
+                        'adresse' => $responsableData['adresse'] ?? null,
+                        'ref' => (string) Str::uuid(),
+                        'created_by' => auth()->id(),
+                    ]
+                );
+
+                // Associer le responsable à l'élève avec les attributs de pivot
+                $pivotAttributes = [
+                    'lien_parental' => $responsableData['type_responsable'],
+                    'est_responsable_financier' => $index === 0, // Premier responsable = financier par défaut
+                    'est_contact_urgence' => true,
+                    'ordre_priorite' => $index + 1,
+                ];
+
+                $eleve->responsables()->attach($responsable->id, $pivotAttributes);
+
+                // Si c'est le premier responsable, le définir comme responsable principal
+                if ($index === 0) {
+                    $eleve->update(['responsable_principal_id' => $responsable->id]);
+                }
+            }
+        }
+
+        // Incrémenter le compteur d'élèves de la classe
+        $classe->incrementerNombreEleves();
 
         return redirect()
-            ->route('eleves.index')
+            ->route('eleves.show', $eleve)
             ->with('success', "Élève {$eleve->nom_complet} créé avec succès. Matricule: {$eleve->matricule}");
     }
 
+
     public function show(string $eleve)
     {
-        $eleve = Eleve::findorFail($eleve);
+        $eleve = Eleve::findOrFail($eleve);
+
         $eleve->load([
             'classe:id,nom_classe,niveau,section,professeur_principal_id',
             'classe.professeurPrincipal:id,name,email',
             'createdBy:id,name,email',
+            'responsables',
+            'responsablePrincipal',
+            'responsables.eleves' => function ($query) use ($eleve) {
+                $query->where('eleves.id', '!=', $eleve->id);
+            },
             'updatedBy:id,name,email',
             'historiquePaiements.user',
             'historiquePaiements.tranche',
             'notes' => function ($q) {
                 $q->with('matiere:id,nom,coefficient')
-                  ->orderBy('created_at', 'desc')
-                  ->limit(10);
+                    ->orderBy('created_at', 'desc')
+                    ->limit(10);
             },
             'absences' => function ($q) {
                 $q->orderBy('date_absence', 'desc')
-                  ->limit(10);
+                    ->limit(10);
             },
             'paiements' => function ($q) {
                 $q->orderBy('created_at', 'desc')
-                  ->limit(10);
+                    ->limit(10);
             },
             'logs' => function ($q) {
                 $q->with('user:id,name')
-                  ->latest()
-                  ->limit(10);
+                    ->latest()
+                    ->limit(10);
             },
         ]);
 
@@ -194,15 +260,38 @@ class EleveController extends Controller
 
         return Inertia::render('Eleves/Show', [
             'eleve' => $eleve,
+            'fraternites' => $eleve->responsables
+                ->flatMap->eleves
+                ->unique('id')
+                ->values(),
         ]);
     }
 
-    public function edit(Eleve $eleve)
+    private function logChangements(Eleve $eleve, array $oldData, array $newData)
     {
+        $changes = [];
+        foreach ($newData as $key => $value) {
+            if (isset($oldData[$key]) && $oldData[$key] != $value) {
+                $changes[$key] = [
+                    'old' => $oldData[$key],
+                    'new' => $value
+                ];
+            }
+        }
+
+        if (!empty($changes)) {
+            $description = "Modification de l'élève par " . auth()->user()->name;
+            // Logique de log ici
+        }
+    }
+
+    public function edit(string $eleve)
+    {
+        $eleve = Eleve::findOrFail($eleve);
         $eleve->load('classe:id,nom_classe,niveau');
-        
+
         $classes = Classe::active()->select('id', 'nom_classe', 'niveau', 'section')->get();
-        
+
         return Inertia::render('Eleves/Edit', [
             'eleve' => $eleve,
             'classes' => $classes,
@@ -223,6 +312,184 @@ class EleveController extends Controller
         ]);
     }
 
+    
+
+    public function destroy(Eleve $eleve)
+    {
+        if (!$eleve->can_be_deleted) {
+            return back()->with('error', 'Impossible de supprimer cet élève car il a des notes ou des paiements associés.');
+        }
+
+        $nomEleve = $eleve->nom_complet;
+
+        // Log avant suppression
+        $eleve->logAction(
+            'deleted',
+            $eleve,
+            $eleve->toArray(),
+            null,
+            "Élève supprimé par " . auth()->user()->name
+        );
+
+        $eleve->delete();
+
+        return redirect()
+            ->route('eleves.index')
+            ->with('success', "Élève {$nomEleve} supprimé avec succès.");
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:eleves,id',
+            'action' => 'required|in:transferer_classe,changer_statut,exporter',
+            'data' => 'required_if:action,transferer_classe,changer_statut',
+        ]);
+
+        $eleves = Eleve::whereIn('id', $request->ids);
+        $currentUser = auth()->user();
+
+        switch ($request->action) {
+            case 'transferer_classe':
+                $classe = Classe::findOrFail($request->data['classe_id']);
+
+                $eleves->each(function ($eleve) use ($classe, $currentUser) {
+                    $eleve->transfererVersClasse($classe);
+                    $eleve->logAction(
+                        'transferred',
+                        $eleve,
+                        null,
+                        null,
+                        "Transfert vers {$classe->nom_complet} par {$currentUser->name}"
+                    );
+                });
+
+                $message = 'Élèves transférés avec succès.';
+                break;
+
+            case 'changer_statut':
+                $eleves->each(function ($eleve) use ($request, $currentUser) {
+                    $ancienStatut = $eleve->statut;
+                    $eleve->mettreAJourStatut(
+                        $request->data['statut'],
+                        $request->data['motif'] ?? null,
+                        $request->data['date'] ?? null
+                    );
+                    $eleve->logAction(
+                        'status_changed',
+                        $eleve,
+                        ['statut' => $ancienStatut],
+                        ['statut' => $request->data['statut']],
+                        "Changement de statut par {$currentUser->name}"
+                    );
+                });
+
+                $message = 'Statuts modifiés avec succès.';
+                break;
+        }
+
+        return back()->with('success', $message);
+    }
+
+    public function export()
+    {
+        $eleves = Eleve::with('classe:id,nom_classe,niveau')
+            ->orderBy('classe_id')
+            ->orderBy('nom')
+            ->get();
+
+        $csv = \League\Csv\Writer::createFromString('');
+        $csv->insertOne([
+            'Matricule',
+            'Nom',
+            'Prénom',
+            'Date Naissance',
+            'Âge',
+            'Sexe',
+            'Classe',
+            'Statut',
+            'Téléphone',
+            'Email',
+            'Père',
+            'Mère',
+            'Date Inscription',
+            'Moyenne'
+        ]);
+
+        foreach ($eleves as $eleve) {
+            $csv->insertOne([
+                $eleve->matricule,
+                $eleve->nom,
+                $eleve->prenom,
+                $eleve->date_naissance->format('d/m/Y'),
+                $eleve->age,
+                $eleve->sexe_label,
+                $eleve->classe->nom_complet,
+                $eleve->statut_label,
+                $eleve->telephone,
+                $eleve->email,
+                $eleve->nom_pere,
+                $eleve->nom_mere,
+                $eleve->date_inscription->format('d/m/Y'),
+                $eleve->moyenne_generale ?? 'N/A',
+            ]);
+        }
+
+        return response((string) $csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="eleves-' . date('Y-m-d') . '.csv"',
+        ]);
+    }
+
+    public function genererBulletin(Eleve $eleve)
+    {
+        $eleve->load([
+            'classe',
+            'notes.matiere',
+            'notes.evaluation',
+        ]);
+
+        // Calcul des moyennes par matière
+        $matieres = [];
+        foreach ($eleve->notes as $note) {
+            $matiereId = $note->matiere->id;
+
+            if (!isset($matieres[$matiereId])) {
+                $matieres[$matiereId] = [
+                    'matiere' => $note->matiere->nom,
+                    'coefficient' => $note->matiere->coefficient,
+                    'notes' => [],
+                    'moyenne' => 0,
+                ];
+            }
+
+            $matieres[$matiereId]['notes'][] = [
+                'valeur' => $note->valeur,
+                'type' => $note->type,
+                'date' => $note->date_evaluation,
+            ];
+        }
+
+        // Calcul de la moyenne par matière
+        foreach ($matieres as $matiereId => &$matiere) {
+            if (!empty($matiere['notes'])) {
+                $somme = array_sum(array_column($matiere['notes'], 'valeur'));
+                $matiere['moyenne'] = round($somme / count($matiere['notes']), 2);
+            }
+        }
+
+        $data = [
+            'eleve' => $eleve,
+            'matieres' => $matieres,
+            'moyenne_generale' => $eleve->calculerMoyenne(),
+            'date_edition' => now()->format('d/m/Y'),
+        ];
+
+        return Inertia::render('Eleves/Bulletin', $data);
+    }
+
+
     public function update(Request $request, Eleve $eleve)
     {
         $oldData = $eleve->toArray();
@@ -242,18 +509,6 @@ class EleveController extends Controller
                 'email',
                 Rule::unique('eleves')->ignore($eleve->id),
             ],
-            
-            // Parents
-            'nom_pere' => 'nullable|string|max:100',
-            'profession_pere' => 'nullable|string|max:100',
-            'telephone_pere' => 'nullable|string|max:20',
-            'nom_mere' => 'nullable|string|max:100',
-            'profession_mere' => 'nullable|string|max:100',
-            'telephone_mere' => 'nullable|string|max:20',
-            'nom_tuteur' => 'nullable|string|max:100',
-            'profession_tuteur' => 'nullable|string|max:100',
-            'telephone_tuteur' => 'nullable|string|max:20',
-            'adresse_tuteur' => 'nullable|string|max:255',
             
             // Scolarité
             'classe_id' => 'required|exists:classes,id',
@@ -283,7 +538,7 @@ class EleveController extends Controller
             'motif_sortie' => 'nullable|string|max:500',
         ]);
 
-        // Si changement de classe
+        // Gestion du changement de classe
         if ($validated['classe_id'] != $eleve->classe_id) {
             $ancienneClasse = $eleve->classe;
             $nouvelleClasse = Classe::find($validated['classe_id']);
@@ -300,198 +555,29 @@ class EleveController extends Controller
             $validated['historique_classes'] = $historique;
             
             // Mettre à jour les compteurs
-            $ancienneClasse->decrementerNombreEleves();
-            $nouvelleClasse->incrementerNombreEleves();
+            if ($eleve->statut === 'actif') {
+                $ancienneClasse->decrementerNombreEleves();
+                $nouvelleClasse->incrementerNombreEleves();
+            }
         }
 
-        // Si changement de statut
+        // Gestion du changement de statut
         if ($validated['statut'] != $eleve->statut) {
             if (in_array($validated['statut'], ['inactif', 'transfere', 'exclus']) && $eleve->statut === 'actif') {
-                // Décrémenter le nombre d'élèves de la classe
                 $eleve->classe->decrementerNombreEleves();
             } elseif ($validated['statut'] === 'actif' && in_array($eleve->statut, ['inactif', 'transfere', 'exclus'])) {
-                // Incrémenter le nombre d'élèves de la classe
                 $eleve->classe->incrementerNombreEleves();
             }
         }
 
         $validated['updated_by'] = auth()->id();
-        
         $eleve->update($validated);
-        
+
         // Log des changements
-        $newData = $eleve->fresh()->toArray();
-        $changes = [];
-        foreach ($validated as $key => $value) {
-            if ($oldData[$key] != $value) {
-                $changes[$key] = [
-                    'old' => $oldData[$key],
-                    'new' => $value
-                ];
-            }
-        }
-        
-        if (!empty($changes)) {
-            $description = "Modification de l'élève par " . auth()->user()->name;
-            $eleve->logAction('updated', $eleve, $oldData, $newData, $description);
-        }
+        $this->logChangements($eleve, $oldData, $validated);
 
         return redirect()
             ->route('eleves.show', $eleve)
             ->with('success', "Élève {$eleve->nom_complet} mis à jour avec succès.");
-    }
-
-    public function destroy(Eleve $eleve)
-    {
-        if (!$eleve->can_be_deleted) {
-            return back()->with('error', 'Impossible de supprimer cet élève car il a des notes ou des paiements associés.');
-        }
-
-        $nomEleve = $eleve->nom_complet;
-        
-        // Log avant suppression
-        $eleve->logAction('deleted', $eleve, $eleve->toArray(), null,
-            "Élève supprimé par " . auth()->user()->name
-        );
-        
-        $eleve->delete();
-
-        return redirect()
-            ->route('eleves.index')
-            ->with('success', "Élève {$nomEleve} supprimé avec succès.");
-    }
-
-    public function bulkAction(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:eleves,id',
-            'action' => 'required|in:transferer_classe,changer_statut,exporter',
-            'data' => 'required_if:action,transferer_classe,changer_statut',
-        ]);
-
-        $eleves = Eleve::whereIn('id', $request->ids);
-        $currentUser = auth()->user();
-
-        switch ($request->action) {
-            case 'transferer_classe':
-                $classe = Classe::findOrFail($request->data['classe_id']);
-                
-                $eleves->each(function ($eleve) use ($classe, $currentUser) {
-                    $eleve->transfererVersClasse($classe);
-                    $eleve->logAction('transferred', $eleve, null, null,
-                        "Transfert vers {$classe->nom_complet} par {$currentUser->name}"
-                    );
-                });
-                
-                $message = 'Élèves transférés avec succès.';
-                break;
-                
-            case 'changer_statut':
-                $eleves->each(function ($eleve) use ($request, $currentUser) {
-                    $ancienStatut = $eleve->statut;
-                    $eleve->mettreAJourStatut(
-                        $request->data['statut'],
-                        $request->data['motif'] ?? null,
-                        $request->data['date'] ?? null
-                    );
-                    $eleve->logAction('status_changed', $eleve,
-                        ['statut' => $ancienStatut],
-                        ['statut' => $request->data['statut']],
-                        "Changement de statut par {$currentUser->name}"
-                    );
-                });
-                
-                $message = 'Statuts modifiés avec succès.';
-                break;
-        }
-
-        return back()->with('success', $message);
-    }
-
-    public function export()
-    {
-        $eleves = Eleve::with('classe:id,nom_classe,niveau')
-            ->orderBy('classe_id')
-            ->orderBy('nom')
-            ->get();
-        
-        $csv = \League\Csv\Writer::createFromString('');
-        $csv->insertOne([
-            'Matricule', 'Nom', 'Prénom', 'Date Naissance', 'Âge', 'Sexe',
-            'Classe', 'Statut', 'Téléphone', 'Email', 'Père', 'Mère',
-            'Date Inscription', 'Moyenne'
-        ]);
-        
-        foreach ($eleves as $eleve) {
-            $csv->insertOne([
-                $eleve->matricule,
-                $eleve->nom,
-                $eleve->prenom,
-                $eleve->date_naissance->format('d/m/Y'),
-                $eleve->age,
-                $eleve->sexe_label,
-                $eleve->classe->nom_complet,
-                $eleve->statut_label,
-                $eleve->telephone,
-                $eleve->email,
-                $eleve->nom_pere,
-                $eleve->nom_mere,
-                $eleve->date_inscription->format('d/m/Y'),
-                $eleve->moyenne_generale ?? 'N/A',
-            ]);
-        }
-        
-        return response((string) $csv, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="eleves-' . date('Y-m-d') . '.csv"',
-        ]);
-    }
-
-    public function genererBulletin(Eleve $eleve)
-    {
-        $eleve->load([
-            'classe',
-            'notes.matiere',
-            'notes.evaluation',
-        ]);
-        
-        // Calcul des moyennes par matière
-        $matieres = [];
-        foreach ($eleve->notes as $note) {
-            $matiereId = $note->matiere->id;
-            
-            if (!isset($matieres[$matiereId])) {
-                $matieres[$matiereId] = [
-                    'matiere' => $note->matiere->nom,
-                    'coefficient' => $note->matiere->coefficient,
-                    'notes' => [],
-                    'moyenne' => 0,
-                ];
-            }
-            
-            $matieres[$matiereId]['notes'][] = [
-                'valeur' => $note->valeur,
-                'type' => $note->type,
-                'date' => $note->date_evaluation,
-            ];
-        }
-        
-        // Calcul de la moyenne par matière
-        foreach ($matieres as $matiereId => &$matiere) {
-            if (!empty($matiere['notes'])) {
-                $somme = array_sum(array_column($matiere['notes'], 'valeur'));
-                $matiere['moyenne'] = round($somme / count($matiere['notes']), 2);
-            }
-        }
-        
-        $data = [
-            'eleve' => $eleve,
-            'matieres' => $matieres,
-            'moyenne_generale' => $eleve->calculerMoyenne(),
-            'date_edition' => now()->format('d/m/Y'),
-        ];
-        
-        return Inertia::render('Eleves/Bulletin', $data);
     }
 }

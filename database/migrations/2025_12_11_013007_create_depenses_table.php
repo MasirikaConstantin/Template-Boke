@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('depenses', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Budget::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Budget::class)->nullable()->constrained()->nullOnDelete();
             $table->foreignIdFor(CategorieDepense::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained(); // Utilisateur qui a effectué la dépense
             $table->string('reference')->unique();

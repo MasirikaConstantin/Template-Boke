@@ -21,17 +21,9 @@ return new class extends Migration
             $table->string('telephone')->nullable();
             $table->string('email')->nullable()->unique();
             
-            // Parents/Tuteurs
-            $table->string('nom_pere')->nullable();
-            $table->string('profession_pere')->nullable();
-            $table->string('telephone_pere')->nullable();
-            $table->string('nom_mere')->nullable();
-            $table->string('profession_mere')->nullable();
-            $table->string('telephone_mere')->nullable();
-            $table->string('nom_tuteur')->nullable();
-            $table->string('profession_tuteur')->nullable();
-            $table->string('telephone_tuteur')->nullable();
-            $table->string('adresse_tuteur')->nullable();
+            // Référence au responsable principal (facultatif)
+            $table->foreignId('responsable_principal_id')->nullable()
+                  ->constrained('responsables')->nullOnDelete();
             
             // Scolarité
             $table->foreignId('classe_id')->constrained('classes')->cascadeOnDelete();
@@ -70,8 +62,7 @@ return new class extends Migration
             $table->uuid('ref')->unique();
             $table->boolean('redoublant')->default(false);
             $table->integer('annee_redoublement')->nullable();
-            $table->json('historique_classes')->nullable(); // JSON des classes précédentes
-            $table->json('historique_notes')->nullable(); // JSON des notes par année
+            $table->json('historique_classes')->nullable();
             
             // Utilisateur qui a créé/modifié
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
@@ -85,7 +76,7 @@ return new class extends Migration
             $table->index('matricule');
             $table->index('classe_id');
             $table->index('statut');
-            $table->index('date_naissance');
+            $table->index('responsable_principal_id');
         });
     }
 

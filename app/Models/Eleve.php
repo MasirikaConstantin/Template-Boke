@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Eleve extends Model
 {
     use SoftDeletes, HasLogs;
 
     protected $fillable = [
-        // Identité
         'matricule',
         'nom',
         'prenom',
@@ -24,60 +24,33 @@ class Eleve extends Model
         'adresse',
         'telephone',
         'email',
-        
-        // Parents/Tuteurs
-        'nom_pere',
-        'profession_pere',
-        'telephone_pere',
-        'nom_mere',
-        'profession_mere',
-        'telephone_mere',
-        'nom_tuteur',
-        'profession_tuteur',
-        'telephone_tuteur',
-        'adresse_tuteur',
-        
-        // Scolarité
+        'responsable_principal_id',
         'classe_id',
         'statut',
         'date_inscription',
         'date_sortie',
         'motif_sortie',
-        
-        // Santé
         'antecedents_medicaux',
         'groupe_sanguin',
         'allergies',
         'medecin_traitant',
         'telephone_medecin',
-        
-        // Transport
         'moyen_transport',
         'nom_transporteur',
         'telephone_transporteur',
-        
-        // Académique
         'derniere_ecole',
         'derniere_classe',
         'moyenne_generale',
         'rang_classe',
         'observations',
-        
-        // Documents
         'photo',
         'certificat_naissance',
         'bulletin_precedent',
         'certificat_medical',
         'autorisation_parentale',
-        
-        // Système
-        'ref',
         'redoublant',
         'annee_redoublement',
         'historique_classes',
-        'historique_notes',
-        
-        // Utilisateurs
         'created_by',
         'updated_by',
     ];
@@ -86,10 +59,9 @@ class Eleve extends Model
         'date_naissance' => 'date',
         'date_inscription' => 'date',
         'date_sortie' => 'date',
-        'moyenne_generale' => 'decimal:2',
         'redoublant' => 'boolean',
+        'revenu_mensuel' => 'decimal:2',
         'historique_classes' => 'array',
-        'historique_notes' => 'array',
     ];
 
     protected $appends = [
@@ -98,6 +70,59 @@ class Eleve extends Model
         'statut_label',
         'sexe_label',
     ];
+    public function responsables(): BelongsToMany
+    {
+        return $this->belongsToMany(Responsable::class, 'eleve_responsable')
+            ->withPivot([
+                'est_responsable_financier',
+                'est_contact_urgence',
+                'est_autorise_retirer',
+                'ordre_priorite',
+                'telephone_urgence',
+            ])
+            ->withTimestamps();
+    }
+    public function responsablePrincipal(): BelongsTo
+    {
+        return $this->belongsTo(Responsable::class, 'responsable_principal_id');
+    }
+
+    // Accessor pour le nom complet
+    public function getNomCompletAttribute(): string
+    {
+        return trim($this->nom . ' ' . $this->prenom);
+    }
+
+    // Méthode pour obtenir le responsable financier
+    public function getResponsableFinancierAttribute()
+    {
+        return $this->responsables()
+            ->wherePivot('est_responsable_financier', true)
+            ->orderByPivot('ordre_priorite')
+            ->first();
+    }
+
+    // Méthode pour obtenir les contacts d'urgence
+    public function getContactsUrgenceAttribute()
+    {
+        return $this->responsables()
+            ->wherePivot('est_contact_urgence', true)
+            ->orderByPivot('ordre_priorite')
+            ->get();
+    }
+
+    // Méthode pour ajouter un responsable
+    public function ajouterResponsable(Responsable $responsable, array $pivotAttributes = [])
+    {
+        $defaultAttributes = [
+            'lien_parental' => 'tuteur_legal',
+            'est_responsable_financier' => false,
+            'est_contact_urgence' => false,
+            'ordre_priorite' => 1,
+        ];
+
+        return $this->responsables()->attach($responsable->id, array_merge($defaultAttributes, $pivotAttributes));
+    }
 
     // Relations
     public function classe(): BelongsTo
@@ -130,31 +155,30 @@ class Eleve extends Model
         return $this->hasMany(Paiement::class);
     }
 
-    // Accessors
-    public function getNomCompletAttribute(): string
-    {
-        return $this->nom . ' ' . $this->prenom;
-    }
 
-    public function getAgeAttribute(): int
-    {
-        return now()->diffInYears($this->date_naissance);
+    public function getAgeAttribute(): ?int
+{
+    if (!$this->date_naissance) {
+        return null;
     }
+    return $this->date_naissance->diffInYears(now(), false);
+}
+
 
     public function getStatutLabelAttribute(): string
-{
-    $statut = $this->statut ?? '';
+    {
+        $statut = $this->statut ?? '';
 
-    $statuts = [
-        'actif' => 'Actif',
-        'inactif' => 'Inactif',
-        'transfere' => 'Transféré',
-        'exclus' => 'Exclus',
-        'diplome' => 'Diplômé',
-    ];
+        $statuts = [
+            'actif' => 'Actif',
+            'inactif' => 'Inactif',
+            'transfere' => 'Transféré',
+            'exclus' => 'Exclus',
+            'diplome' => 'Diplômé',
+        ];
 
-    return $statuts[$statut] ?? ucfirst($statut) ?: 'Non défini';
-}
+        return $statuts[$statut] ?? ucfirst($statut) ?: 'Non défini';
+    }
 
 
     public function getSexeLabelAttribute(): string
@@ -166,11 +190,11 @@ class Eleve extends Model
     {
         if (!$this->photo) {
             // Avatar par défaut basé sur le sexe
-            return $this->sexe === 'M' 
+            return $this->sexe === 'M'
                 ? 'https://ui-avatars.com/api/?name=' . urlencode($this->nom_complet) . '&background=3b82f6&color=fff'
                 : 'https://ui-avatars.com/api/?name=' . urlencode($this->nom_complet) . '&background=ec4899&color=fff';
         }
-        
+
         return asset('storage/' . $this->photo);
     }
 
@@ -209,9 +233,9 @@ class Eleve extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where('nom', 'like', "%{$search}%")
-                    ->orWhere('prenom', 'like', "%{$search}%")
-                    ->orWhere('matricule', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+            ->orWhere('prenom', 'like', "%{$search}%")
+            ->orWhere('matricule', 'like', "%{$search}%")
+            ->orWhere('email', 'like', "%{$search}%");
     }
 
     public function scopeRedoublants($query)
@@ -231,7 +255,7 @@ class Eleve extends Model
             $annee = now()->format('Y');
             $classe = $this->classe;
             $sequence = Eleve::whereYear('created_at', now()->year)->count() + 1;
-            
+
             $this->matricule = "EL{$annee}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
         }
     }
@@ -246,15 +270,15 @@ class Eleve extends Model
             'date_entree' => $this->date_inscription,
             'date_sortie' => $dateTransfert ?? now(),
         ];
-        
+
         $this->historique_classes = $historique;
         $this->classe_id = $nouvelleClasse->id;
         $this->date_inscription = $dateTransfert ?? now();
-        
+
         // Mettre à jour les compteurs
         $this->classe->decrementerNombreEleves();
         $nouvelleClasse->incrementerNombreEleves();
-        
+
         $this->save();
     }
 
@@ -263,13 +287,13 @@ class Eleve extends Model
         if ($nouveauStatut === 'inactif' || $nouveauStatut === 'transfere' || $nouveauStatut === 'exclus') {
             $this->date_sortie = $date ?? now();
             $this->motif_sortie = $motif;
-            
+
             // Décrémenter le nombre d'élèves de la classe
             if ($this->classe) {
                 $this->classe->decrementerNombreEleves();
             }
         }
-        
+
         $this->statut = $nouveauStatut;
         $this->save();
     }
@@ -277,20 +301,20 @@ class Eleve extends Model
     public function calculerMoyenne(): ?float
     {
         $notes = $this->notes()->with('matiere')->get();
-        
+
         if ($notes->isEmpty()) {
             return null;
         }
-        
+
         $totalCoefficient = 0;
         $totalPoints = 0;
-        
+
         foreach ($notes as $note) {
             $coefficient = $note->matiere->coefficient ?? 1;
             $totalCoefficient += $coefficient;
             $totalPoints += ($note->valeur ?? 0) * $coefficient;
         }
-        
+
         return $totalCoefficient > 0 ? round($totalPoints / $totalCoefficient, 2) : null;
     }
 
@@ -303,11 +327,11 @@ class Eleve extends Model
             if (empty($eleve->ref)) {
                 $eleve->ref = (string) \Illuminate\Support\Str::uuid();
             }
-            
+
             if (auth()->check()) {
                 $eleve->created_by = auth()->id();
             }
-            
+
             $eleve->genererMatricule();
         });
 
