@@ -240,8 +240,8 @@
                 <td>{{ \Carbon\Carbon::parse($paiement->date_paiement)->format('d/m/Y') }}</td>
                 <td>{{ $paiement->eleve->nom_complet }}</td>
                 <td>{{ $paiement->eleve->matricule }}</td>
-                <td>{{ $paiement->tranche->nom_tranche }}</td>
-                <td>{{ $paiement->tranche->annee_scolaire }}</td>
+                <td>{{ $paiement->tranche ? $paiement->tranche->nom_tranche : "-" }}</td>
+                <td>{{ $paiement->tranche ? $paiement->tranche->annee_scolaire :"-" }}</td>
                 <td class="montant">{{ number_format($paiement->montant, 0, ',', ' ') }} $</td>
                 <td>
                     @switch($paiement->mode_paiement)
