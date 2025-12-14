@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Eleve extends Model
 {
-    use SoftDeletes, HasLogs;
+    use SoftDeletes, HasLogs, HasFactory;
 
     protected $fillable = [
         'matricule',
@@ -157,12 +158,12 @@ class Eleve extends Model
 
 
     public function getAgeAttribute(): ?int
-{
-    if (!$this->date_naissance) {
-        return null;
+    {
+        if (!$this->date_naissance) {
+            return null;
+        }
+        return $this->date_naissance->diffInYears(now(), false);
     }
-    return $this->date_naissance->diffInYears(now(), false);
-}
 
 
     public function getStatutLabelAttribute(): string
@@ -341,8 +342,20 @@ class Eleve extends Model
             }
         });
 
-        static::created(function ($eleve) {
-            // Incrémenter le nombre d'élèves dans la classe
+        
+
+        static::created(function (Eleve $eleve) {
+
+            if (! $eleve->matricule) {
+                $year = now()->format('y'); // ex: 25
+
+                // Numéro séquentiel basé sur ID (SAFE)
+                $numero = str_pad($eleve->id, 4, '0', STR_PAD_LEFT);
+
+                $eleve->updateQuietly([
+                    'matricule' => "ELV-{$year}-{$numero}",
+                ]);
+            }
             if ($eleve->classe) {
                 $eleve->classe->incrementerNombreEleves();
             }

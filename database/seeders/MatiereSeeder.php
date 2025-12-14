@@ -2,16 +2,18 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Matiere;
 use Illuminate\Database\Seeder;
 
 class MatiereSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //
+        if (Matiere::count() > 0) {
+            $this->command->info('Matières déjà existantes — seed ignoré');
+            return;
+        }
+
+        Matiere::factory()->count(15)->create();
     }
 }

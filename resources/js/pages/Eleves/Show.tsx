@@ -175,6 +175,12 @@ export default function ShowEleve({ eleve, fraternites }: ShowEleveProps) {
     });
   };
 
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('fr-FR', {
+      style: 'currency',
+      currency: 'USD',
+    }).replace('$US', '$');
+  };
   const getStatutBadge = (statut: string) => {
     const variants: Record<string, 'success' | 'warning' | 'secondary' | 'destructive' | 'outline'> = {
       'actif': 'success',
@@ -764,7 +770,7 @@ export default function ShowEleve({ eleve, fraternites }: ShowEleveProps) {
                               
                               <div className="text-right">
                                 <p className="text-2xl font-bold text-green-600">
-                                  {Number(paiement.montant).toLocaleString('fr-FR')} CDF
+                                  {formatCurrency(Number(paiement.montant))} 
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
                                   Paiement effectué
@@ -777,9 +783,9 @@ export default function ShowEleve({ eleve, fraternites }: ShowEleveProps) {
                           <div className="flex items-center justify-between p-4 border rounded-lg bg-accent/50">
                             <p className="font-medium">Total payé</p>
                             <p className="text-2xl font-bold text-green-600">
-                              {eleve.historique_paiements
-                                .reduce((total, paiement) => total + Number(paiement.montant), 0)
-                                .toLocaleString('fr-FR')} CDF
+                              {formatCurrency(eleve.historique_paiements
+                                .reduce((total, paiement) => total + Number(paiement.montant), 0))
+                                } 
                             </p>
                           </div>
                         </div>

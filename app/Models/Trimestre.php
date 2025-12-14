@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Trimestre extends Model
 {
+    use HasFactory;
     protected $fillable = ['nom', 'numero', 'date_debut', 'date_fin', 'annee_scolaire_id', 'est_actif', 'est_cloture'];
     
     public function anneeScolaire()

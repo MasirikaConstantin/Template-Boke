@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Classe extends Model
 {
-    use SoftDeletes, HasLogs;
+    use SoftDeletes, HasLogs,HasFactory;
 
     protected $fillable = [
         'nom_classe',

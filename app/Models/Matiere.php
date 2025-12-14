@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Matiere extends Model
 {
-    use SoftDeletes, HasLogs;
+    use SoftDeletes, HasLogs, HasFactory;
     
     protected $fillable = ['code', 'nom', 'nom_complet', 'coefficient', 'niveau', 'type', 'volume_horaire', 'ordre_affichage', 'description', 'est_active', 'professeur_id'];
     

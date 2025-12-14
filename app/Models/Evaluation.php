@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Evaluation extends Model
 {
-    use HasLogs;
+    use HasLogs, HasFactory,SoftDeletes;
     
     protected $fillable = ['nom', 'type', 'coefficient', 'bareme', 'date_evaluation', 'heure_debut', 'heure_fin', 'matiere_id', 'classe_id', 'trimestre_id', 'description', 'competences_evaluees', 'est_obligatoire', 'est_terminee'];
     

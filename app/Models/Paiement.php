@@ -32,6 +32,20 @@ class Paiement extends Model
     static::creating(function ($paiement) {
         $paiement->ref = (string) \Illuminate\Support\Str::uuid();
     });
+    static::created(function ($paiement) {
+        if (! $paiement->reference) {
+            $year = now()->year;
+
+            $lastNumber = Paiement::withTrashed()
+                ->whereYear('created_at', $year)
+                ->where('id', '<', $paiement->id)
+                ->count();
+
+            $paiement->updateQuietly([
+                'reference' => 'PAY-' . $year . '-' . str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT),
+            ]);
+        }
+    });
 }
 public function getNomCompletAttribute()
 {
