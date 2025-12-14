@@ -137,32 +137,32 @@ export default function ResponsableRelever({
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...localFilters, [key]: value };
     setLocalFilters(newFilters);
-    
+
     // Envoyer les filtres au serveur
     const cleanFilters = Object.fromEntries(
       Object.entries(newFilters).filter(([_, v]) => v && v !== 'all')
     );
-    
+
     router.get(`/responsables/${responsable.id}/relever`, cleanFilters, {
       preserveState: true,
     });
   };
 
   const handleExportPdf = () => {
-  const cleanFilters = Object.fromEntries(
-    Object.entries(localFilters).filter(([_, v]) => v && v !== 'all')
-  );
+    const cleanFilters = Object.fromEntries(
+      Object.entries(localFilters).filter(([_, v]) => v && v !== 'all')
+    );
 
-  const query = new URLSearchParams({
-    ...cleanFilters,
-    export: 'pdf',
-  }).toString();
+    const query = new URLSearchParams({
+      ...cleanFilters,
+      export: 'pdf',
+    }).toString();
 
-  window.open(
-    `/responsables/${responsable.id}/relever?${query}`,
-    '_blank'
-  );
-};
+    window.open(
+      `/responsables/${responsable.id}/relever?${query}`,
+      '_blank'
+    );
+  };
 
 
   const handleResetFilters = () => {
@@ -173,7 +173,7 @@ export default function ResponsableRelever({
       date_debut: '',
       date_fin: '',
     });
-    
+
     router.get(`/responsables/${responsable.id}/relever`, {}, {
       preserveState: true,
     });
@@ -197,7 +197,7 @@ export default function ResponsableRelever({
       'virement': 'outline',
       'mobile_money': 'default',
     };
-    
+
     const labels: Record<string, string> = {
       'especes': 'Espèces',
       'cheque': 'Chèque',
@@ -211,11 +211,10 @@ export default function ResponsableRelever({
       </Badge>
     );
   };
-
   return (
     <>
       <Head title={`Relevé de paiements - ${responsable.nom_complet}`} />
-      
+
       <DashboardLayout activeRoute="/responsables">
         <PageHeader
           title={`Relevé de paiements`}
@@ -263,7 +262,7 @@ export default function ResponsableRelever({
                   </p>
                 )}
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium mb-2">Statistiques</h4>
                 <div className="space-y-1">
@@ -279,7 +278,7 @@ export default function ResponsableRelever({
                   </p>
                 </div>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium mb-2">Période du relevé</h4>
                 <p className="text-sm">
@@ -306,91 +305,91 @@ export default function ResponsableRelever({
               </CardHeader>
               <CardContent className="space-y-4 ">
                 <div className='flex gap-2'>
-                    <div className="space-y-2">
-                  <label className="text-sm font-medium">Élève</label>
-                  <Select
-                    value={localFilters.eleve_id}
-                    onValueChange={(value) => handleFilterChange('eleve_id', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tous les élèves" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les élèves</SelectItem>
-                      {eleves.map((eleve) => (
-                        <SelectItem key={eleve.id} value={eleve.id.toString()}>
-                          {eleve.nom_complet}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Tranche</label>
-                  <Select
-                    value={localFilters.tranche_id}
-                    onValueChange={(value) => handleFilterChange('tranche_id', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes les tranches" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les tranches</SelectItem>
-                      {tranches.map((tranche) => (
-                        <SelectItem key={tranche.id} value={tranche.id.toString()}>
-                          {tranche.nom_tranche} ({tranche.annee_scolaire})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Année scolaire</label>
-                  <Select
-                    value={localFilters.annee_scolaire}
-                    onValueChange={(value) => handleFilterChange('annee_scolaire', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes les années" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les années</SelectItem>
-                      {annees.map((annee) => (
-                        <SelectItem key={annee} value={annee}>
-                          {annee}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Date de début</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="date"
-                      value={localFilters.date_debut}
-                      onChange={(e) => handleFilterChange('date_debut', e.target.value)}
-                      className="pl-10"
-                    />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Élève</label>
+                    <Select
+                      value={localFilters.eleve_id}
+                      onValueChange={(value) => handleFilterChange('eleve_id', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tous les élèves" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les élèves</SelectItem>
+                        {eleves.map((eleve) => (
+                          <SelectItem key={eleve.id} value={eleve.id.toString()}>
+                            {eleve.nom_complet}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Date de fin</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="date"
-                      value={localFilters.date_fin}
-                      onChange={(e) => handleFilterChange('date_fin', e.target.value)}
-                      className="pl-10"
-                    />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Tranche</label>
+                    <Select
+                      value={localFilters.tranche_id}
+                      onValueChange={(value) => handleFilterChange('tranche_id', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Toutes les tranches" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les tranches</SelectItem>
+                        {tranches.map((tranche) => (
+                          <SelectItem key={tranche.id} value={tranche.id.toString()}>
+                            {tranche.nom_tranche} ({tranche.annee_scolaire})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Année scolaire</label>
+                    <Select
+                      value={localFilters.annee_scolaire}
+                      onValueChange={(value) => handleFilterChange('annee_scolaire', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Toutes les années" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les années</SelectItem>
+                        {annees.map((annee) => (
+                          <SelectItem key={annee} value={annee}>
+                            {annee}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Date de début</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={localFilters.date_debut}
+                        onChange={(e) => handleFilterChange('date_debut', e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Date de fin</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={localFilters.date_fin}
+                        onChange={(e) => handleFilterChange('date_fin', e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-2">
@@ -405,7 +404,7 @@ export default function ResponsableRelever({
               </CardContent>
             </Card>
 
-            
+
           </div>
 
           {/* Colonne droite - Liste des paiements */}
@@ -469,13 +468,14 @@ export default function ResponsableRelever({
                               <TableCell>
                                 <div className="space-y-1">
                                   <div className="text-sm font-medium">
-                                    {paiement.tranche.nom_tranche}
+                                    {paiement.tranche?.nom_tranche ?? '—'}
                                   </div>
                                   <div className="text-xs text-muted-foreground">
-                                    {paiement.tranche.annee_scolaire}
+                                    {paiement.tranche?.annee_scolaire ?? 'Non définie'}
                                   </div>
                                 </div>
                               </TableCell>
+
                               <TableCell className="font-semibold text-green-600">
                                 {formatMontant(paiement.montant)}
                               </TableCell>
@@ -518,7 +518,7 @@ export default function ResponsableRelever({
                         </div>
                         <div className="text-center p-3 border rounded">
                           <p className="text-2xl font-bold">
-                            {paiements.data.length > 0 
+                            {paiements.data.length > 0
                               ? formatMontant(stats.total_montant / paiements.total)
                               : '$0.00'}
                           </p>
@@ -557,7 +557,7 @@ export default function ResponsableRelever({
                           {eleveStat.matricule}
                         </Badge>
                       </div>
-                      
+
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground">
                           {eleveStat.classe}
@@ -566,7 +566,7 @@ export default function ResponsableRelever({
                           {formatMontant(eleveStat.total_paye)}
                         </p>
                       </div>
-                      
+
                       <div className="mt-2">
                         <Link href={`/responsables/${responsable.id}/relever/eleve/${eleveStat.id}`}>
                           <Button size="sm" variant="outline" className="w-full">

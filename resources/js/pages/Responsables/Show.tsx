@@ -39,7 +39,7 @@ import responsables from '@/routes/responsables';
 interface Paiement {
   id: number;
   reference: string;
-  montant: number;
+  montant: string;
   mode_paiement: string;
   date_paiement: string;
   commentaire: string | null;
@@ -101,7 +101,7 @@ interface ShowResponsableProps {
       name: string;
       email: string;
     } | null;
-    
+
     eleves: Array<{
       id: number;
       matricule: string;
@@ -137,10 +137,10 @@ interface ShowResponsableProps {
   };
 }
 
-export default function ShowResponsable({ 
-  responsable, 
+export default function ShowResponsable({
+  responsable,
   informationsFinancieres,
-  statistiques 
+  statistiques
 }: ShowResponsableProps) {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Non renseigné';
@@ -218,11 +218,11 @@ export default function ShowResponsable({
       default: return '💰';
     }
   };
-console.log(responsable.eleves);
+  console.log(responsable.eleves);
   return (
     <>
       <Head title={responsable.nom_complet} />
-      
+
       <DashboardLayout activeRoute="/responsables">
         <PageHeader
           title={responsable.nom_complet}
@@ -263,18 +263,17 @@ console.log(responsable.eleves);
             <Card>
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <div className={`h-32 w-32 rounded-full flex items-center justify-center text-5xl ${
-                    responsable.sexe === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
-                  }`}>
-                    {responsable.type_responsable === 'pere' ? '👨' : 
-                     responsable.type_responsable === 'mere' ? '👩' : '👤'}
+                  <div className={`h-32 w-32 rounded-full flex items-center justify-center text-5xl ${responsable.sexe === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
+                    }`}>
+                    {responsable.type_responsable === 'pere' ? '👨' :
+                      responsable.type_responsable === 'mere' ? '👩' : '👤'}
                   </div>
-                  
+
                   <div>
                     <h2 className="text-2xl font-bold">{responsable.nom_complet}</h2>
                     <p className="text-muted-foreground">Réf: {responsable.ref}</p>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2 justify-center">
                     <Badge variant="default">
                       {getTypeResponsableLabel(responsable.type_responsable)}
@@ -284,41 +283,41 @@ console.log(responsable.eleves);
                     </Badge>
                   </div>
                 </div>
-                
+
                 <div className="mt-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <span>{responsable.telephone_1}</span>
                   </div>
-                  
+
                   {responsable.telephone_2 && (
                     <div className="flex items-center gap-3">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                       <span>{responsable.telephone_2}</span>
                     </div>
                   )}
-                  
+
                   {responsable.email && (
                     <div className="flex items-center gap-3">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       <span>{responsable.email}</span>
                     </div>
                   )}
-                  
+
                   {responsable.date_naissance && (
                     <div className="flex items-center gap-3">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span>Né(e) le {formatDate(responsable.date_naissance)}</span>
                     </div>
                   )}
-                  
+
                   {responsable.lieu_naissance && (
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <span>À {responsable.lieu_naissance}</span>
                     </div>
                   )}
-                  
+
                   {responsable.cin && (
                     <div className="flex items-center gap-3">
                       <FileText className="h-4 w-4 text-muted-foreground" />
@@ -344,7 +343,7 @@ console.log(responsable.eleves);
                       <p className="text-sm text-muted-foreground">Profession</p>
                       <p className="font-medium">{responsable.profession}</p>
                     </div>
-                    
+
                     {responsable.entreprise && (
                       <div>
                         <p className="text-sm text-muted-foreground">Entreprise</p>
@@ -354,14 +353,14 @@ console.log(responsable.eleves);
                         </p>
                       </div>
                     )}
-                    
+
                     {responsable.poste && (
                       <div>
                         <p className="text-sm text-muted-foreground">Poste</p>
                         <p className="font-medium">{responsable.poste}</p>
                       </div>
                     )}
-                    
+
                     {responsable.revenu_mensuel && (
                       <div>
                         <p className="text-sm text-muted-foreground">Revenu mensuel</p>
@@ -387,14 +386,14 @@ console.log(responsable.eleves);
                 <CardContent>
                   <div className="space-y-3">
                     <p className="text-sm">{responsable.adresse}</p>
-                    
+
                     {responsable.ville && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span>{responsable.ville}</span>
                       </div>
                     )}
-                    
+
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-muted-foreground" />
                       <span>{responsable.pays}</span>
@@ -423,7 +422,7 @@ console.log(responsable.eleves);
                     </div>
                     <BanknoteIcon className="h-8 w-8 text-green-500" />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Élèves financiers</p>
@@ -431,7 +430,7 @@ console.log(responsable.eleves);
                     </div>
                     <Users className="h-8 w-8 text-blue-500" />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Paiements effectués</p>
@@ -488,27 +487,27 @@ console.log(responsable.eleves);
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
                                   <p className="font-medium">{eleve.nom_complet}</p>
-                                  {eleve.pivot.est_responsable_financier==true && (
+                                  {eleve.pivot.est_responsable_financier == true && (
                                     <Badge variant="default" className="text-xs">
                                       <BanknoteIcon className="h-3 w-3 mr-1" />
                                       Financier
                                     </Badge>
                                   )}
                                 </div>
-                                
+
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-2 text-sm">
                                     <CreditCard className="h-3 w-3 text-muted-foreground" />
                                     <span>{eleve.matricule}</span>
                                   </div>
-                                  
+
                                   {eleve.classe && (
                                     <div className="flex items-center gap-2 text-sm">
                                       <GraduationCap className="h-3 w-3 text-muted-foreground" />
                                       <span>{eleve.classe.nom_classe}</span>
                                     </div>
                                   )}
-                                  
+
                                   <div className="flex items-center gap-2 text-sm">
                                     <Users className="h-3 w-3 text-muted-foreground" />
                                     <span>{getLienLabel(eleve.pivot.lien_parental)}</span>
@@ -524,7 +523,13 @@ console.log(responsable.eleves);
                                     <div className="flex items-center gap-2 text-sm">
                                       <DollarSign className="h-3 w-3 text-green-500" />
                                       <span className="font-medium text-green-600">
-                                        {formatMontant(eleve.paiements.reduce((sum, p) => sum + p.montant, 0))} payés
+                                        {formatMontant(
+                                          eleve.paiements.reduce((sum, p) => {
+                                            const montant = parseFloat(p.montant ?? 0)
+                                            return sum + (isNaN(montant) ? 0 : montant)
+                                          }, 0)
+                                        )} payés
+                                        payés
                                       </span>
                                       <Badge variant="outline" className="text-xs">
                                         {eleve.paiements.length} paiement(s)
@@ -532,21 +537,21 @@ console.log(responsable.eleves);
                                     </div>
                                   )}
                                 </div>
-                                
+
                                 <div className="flex flex-wrap gap-2 mt-3">
-                                  {eleve.pivot.est_contact_urgence ==true && (
+                                  {eleve.pivot.est_contact_urgence == true && (
                                     <Badge variant="secondary" className="text-xs">
                                       Contact urgence
                                     </Badge>
                                   )}
-                                  {eleve.pivot.est_autorise_retirer ==true && (
+                                  {eleve.pivot.est_autorise_retirer == true && (
                                     <Badge variant="outline" className="text-xs">
                                       Peut retirer
                                     </Badge>
                                   )}
                                 </div>
                               </div>
-                              
+
                               <div className="flex flex-col gap-1">
                                 <Link href={`/eleves/${eleve.id}`}>
                                   <Button size="sm" variant="ghost">
@@ -560,7 +565,7 @@ console.log(responsable.eleves);
                                 </Link>
                               </div>
                             </div>
-                            
+
                             {/* Autres responsables */}
                             {eleve.autres_responsables && eleve.autres_responsables.length > 0 && (
                               <div className="pt-3 mt-3 border-t">
@@ -621,12 +626,11 @@ console.log(responsable.eleves);
                               {info.derniers_paiements.map((paiement) => (
                                 <div key={paiement.id} className="flex items-center justify-between p-3 border rounded-lg">
                                   <div className="flex items-center gap-3">
-                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                                      paiement.mode_paiement === 'espèce' ? 'bg-green-100 text-green-800' :
-                                      paiement.mode_paiement === 'chèque' ? 'bg-blue-100 text-blue-800' :
-                                      paiement.mode_paiement === 'virement' ? 'bg-purple-100 text-purple-800' :
-                                      'bg-amber-100 text-amber-800'
-                                    }`}>
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${paiement.mode_paiement === 'espèce' ? 'bg-green-100 text-green-800' :
+                                        paiement.mode_paiement === 'chèque' ? 'bg-blue-100 text-blue-800' :
+                                          paiement.mode_paiement === 'virement' ? 'bg-purple-100 text-purple-800' :
+                                            'bg-amber-100 text-amber-800'
+                                      }`}>
                                       <span className="text-lg">
                                         {getModePaiementIcon(paiement.mode_paiement)}
                                       </span>
@@ -650,7 +654,7 @@ console.log(responsable.eleves);
                                       )}
                                     </div>
                                   </div>
-                                  
+
                                   <div className="text-right">
                                     <p className="text-xl font-bold text-green-600">
                                       {formatMontant(paiement.montant)}
@@ -668,7 +672,7 @@ console.log(responsable.eleves);
                                   </div>
                                 </div>
                               ))}
-                              
+
                               {info.nombre_paiements > info.derniers_paiements.length && (
                                 <div className="text-center pt-3 border-t">
                                   <Link href={`/eleves/${info.eleve_id}/paiements`}>
@@ -699,7 +703,7 @@ console.log(responsable.eleves);
                         <p className="text-sm text-muted-foreground">Situation matrimoniale</p>
                         <p className="font-medium">{getSituationLabel(responsable.situation_matrimoniale)}</p>
                       </div>
-                      
+
                       <div>
                         <p className="text-sm text-muted-foreground">Niveau d'étude</p>
                         <p className="font-medium">{getNiveauEtudeLabel(responsable.niveau_etude)}</p>
@@ -729,7 +733,7 @@ console.log(responsable.eleves);
                         <p className="text-sm text-muted-foreground">Référence</p>
                         <p className="font-mono text-sm">{responsable.ref}</p>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Créé le</p>
@@ -740,7 +744,7 @@ console.log(responsable.eleves);
                             </p>
                           )}
                         </div>
-                        
+
                         <div>
                           <p className="text-sm text-muted-foreground">Dernière modification</p>
                           <p className="text-sm">{formatDateTime(responsable.updated_at)}</p>
