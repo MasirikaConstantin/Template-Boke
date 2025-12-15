@@ -29,7 +29,7 @@ Route::get('/', function () {
 })->name('home');
 
 
-Route::get('/dashbaord', function () {
+Route::get('/dashboard', function () {
     return Inertia::render('Dashboard/Index');
 })->name('dashboard')->middleware('auth');
 
@@ -47,10 +47,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Dashboard
-    ///Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Autres routes protégées...
+ 
 });
 
 
