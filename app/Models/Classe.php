@@ -45,6 +45,7 @@ class Classe extends Model
     {
         return $this->hasMany(Cours::class);
     }
+    
 
     // Scopes
     public function scopePrimaire($query)

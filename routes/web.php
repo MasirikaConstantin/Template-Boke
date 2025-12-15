@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AvanceSalaireController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CaisseController;
 use App\Http\Controllers\CategorieDepenseController;
@@ -12,10 +13,14 @@ use App\Http\Controllers\ConfigurationFraisController;
 use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\EleveController;
 use App\Http\Controllers\PaiementController;
+use App\Http\Controllers\PaiementSalaireController;
+use App\Http\Controllers\PresenceController;
+use App\Http\Controllers\ProfSalaireController;
 use App\Http\Controllers\RecouvrementController;
 use App\Http\Controllers\ResponsableController;
 use App\Http\Controllers\TrancheController;
 use App\Models\ConfigurationFrai;
+use App\Models\Professeur;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -142,7 +147,79 @@ Route::middleware(['auth'])->group(function () {
         ->name('responsables.relever.eleve');
         Route::get('/responsables/{responsable}/relever', [ResponsableController::class, 'relever'])
     ->name('responsables.relever');
+
+
+
+    // Routes professeurs
+Route::resource('professeurs', \App\Http\Controllers\ProfesseurController::class)
+    ->middleware(['auth', 'verified']);
+
+// Routes pour les affectations
+Route::prefix('professeurs/{professeur}')->group(function () {
+    Route::post('affecter-classe', [\App\Http\Controllers\ProfesseurController::class, 'affecterClasse'])
+        ->name('professeurs.affecter-classe');
+    
+    Route::delete('desaffecter-classe/{classe}/{matiere}', [\App\Http\Controllers\ProfesseurController::class, 'desaffecterClasse'])
+        ->name('professeurs.desaffecter-classe');
+    
+    Route::get('affectation', function (Professeur $professeur) {
+        return Inertia::render('Professeurs/Affectation', [
+            'professeur' => $professeur->load(['classes', 'matieresEnseignees']),
+        ]);
+    })->name('professeurs.affectation');
 });
+
+// Actions groupées
+Route::post('professeurs/bulk-action', [\App\Http\Controllers\ProfesseurController::class, 'bulkAction'])
+    ->name('professeurs.bulk-action');
+
+     Route::resource('prof-salaires', ProfSalaireController::class)->except(['show']);
+    Route::get('prof-salaires/{profSalaire}', [ProfSalaireController::class, 'show'])->name('prof-salaires.show');
+    Route::post('prof-salaires/bulk-action', [ProfSalaireController::class, 'bulkAction'])->name('prof-salaires.bulk-action');
+});
+Route::resource('presences', PresenceController::class)->except(['show']);
+    Route::get('presences/{presence}', [PresenceController::class, 'show'])->name('presences.show');
+    Route::post('presences/bulk-action', [PresenceController::class, 'bulkAction'])->name('presences.bulk-action');
+    Route::post('presences/marquer', [PresenceController::class, 'marquerPresence'])->name('presences.marquer');
+    Route::get('presences/rapport', [PresenceController::class, 'rapport'])->name('presences.rapport');
+
+
+
+
+
+  // Routes pour les avances sur salaires
+    Route::resource('avance-salaires', AvanceSalaireController::class)->except(['show']);
+    Route::get('avance-salaires/{avanceSalaire}', [AvanceSalaireController::class, 'show'])->name('avance-salaires.show');
+    Route::post('avance-salaires/bulk-action', [AvanceSalaireController::class, 'bulkAction'])->name('avance-salaires.bulk-action');
+    Route::post('avance-salaires/{avanceSalaire}/approuver', [AvanceSalaireController::class, 'approuver'])->name('avance-salaires.approuver');
+    Route::post('avance-salaires/{avanceSalaire}/payer', [AvanceSalaireController::class, 'payer'])->name('avance-salaires.payer');
+
+    // Routes pour les paiements de salaires
+    Route::resource('paiement-salaires', PaiementSalaireController::class)->except(['show']);
+    Route::get('paiement-salaires/{paiementSalaire}', [PaiementSalaireController::class, 'show'])->name('paiement-salaires.show');
+    Route::post('paiement-salaires/bulk-action', [PaiementSalaireController::class, 'bulkAction'])->name('paiement-salaires.bulk-action');
+    Route::post('paiement-salaires/calculer', [PaiementSalaireController::class, 'calculerPaiementAutomatique'])->name('paiement-salaires.calculer');
+    Route::get('paiement-salaires/{paiementSalaire}/bulletin', [PaiementSalaireController::class, 'genererBulletin'])->name('paiement-salaires.bulletin');
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Route::prefix('api/v1')->group(function () {
     // Dashboard
@@ -151,4 +228,6 @@ Route::prefix('api/v1')->group(function () {
     // Vous pouvez ajouter plus d'endpoints spécifiques
     Route::get('/dashboard/activities', [DashboardController::class, 'activities']);
     Route::get('/dashboard/chart-data', [DashboardController::class, 'chartData']);
+
+
 });

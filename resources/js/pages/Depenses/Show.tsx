@@ -311,7 +311,7 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
                     <Separator />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {depense.budget && (
+                      {depense?.budget && (
                         <div className="space-y-3">
                           <div className="flex items-center gap-2">
                             <Wallet className="h-5 w-5 text-primary" />

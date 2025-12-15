@@ -103,13 +103,19 @@ const PrintDepense = React.forwardRef<HTMLDivElement, PrintDepenseProps>(
                 <tr>
                   <td style={{ padding: '8px 0', borderBottom: '1px solid #eee', fontWeight: 'bold' }}>Période budgétaire :</td>
                   <td style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
-                    {depense.budget.mois} {depense.budget.annee}
+                    {depense.budget &&(
+                      <>{depense?.budget.mois} {depense?.budget.annee}</>
+                    )
+
+                    }
                   </td>
                 </tr>
                 <tr>
                   <td style={{ padding: '8px 0', borderBottom: '1px solid #eee', fontWeight: 'bold' }}>Catégorie :</td>
                   <td style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
-                    {depense.categorie.nom_categorie} ({depense.categorie.code})
+                    {depense.categorie &&(
+                      <>{depense.categorie.nom_categorie} ({depense.categorie.code})</>
+                    )}
                   </td>
                 </tr>
                 <tr>

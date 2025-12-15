@@ -16,7 +16,7 @@ class DepenseController extends Controller
     {
         $query = Depense::query()
             ->with(['budget', 'categorie', 'user'])
-            ->orderBy($request->input('sort_by', 'created_at'), $request->input('sort_direction', 'desc'));
+            ->orderBy('created_at','desc');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -26,17 +26,6 @@ class DepenseController extends Controller
             });
         }
 
-        if ($request->filled('budget_id')) {
-            $query->where('budget_id', $request->budget_id);
-        }
-
-        if ($request->filled('categorie_id')) {
-            $query->where('categorie_depense_id', $request->categorie_id);
-        }
-
-        if ($request->filled('statut') && $request->statut !== 'all') {
-            $query->where('statut', $request->statut);
-        }
 
         if ($request->filled('date_debut')) {
             $query->where('date_depense', '>=', $request->date_debut);
@@ -62,7 +51,7 @@ class DepenseController extends Controller
 
         return Inertia::render('Depenses/Index', [
             'depenses' => $depenses,
-            'filters' => $request->only(['search', 'budget_id', 'categorie_id', 'statut', 'date_debut', 'date_fin', 'per_page', 'sort_by', 'sort_direction']),
+            'filters' => $request->only(['search','date_debut', 'date_fin', 'per_page', 'sort_by', 'sort_direction']),
             'stats' => $stats,
             'budgets' => $budgets,
             'categories' => $categories,

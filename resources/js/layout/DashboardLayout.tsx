@@ -52,6 +52,7 @@ import budgets from '@/routes/budgets';
 import depenses from '@/routes/depenses';
 import categoriesDepense from '@/routes/categories-depense';
 import caisse from '@/routes/caisse';
+import professeurs from '@/routes/professeurs';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -78,9 +79,9 @@ interface NavItem {
   badge?: string;
 }
 
-export function DashboardLayout({ 
-  children, 
-  activeRoute = '/dashboard' 
+export function DashboardLayout({
+  children,
+  activeRoute = '/dashboard'
 }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -97,10 +98,16 @@ export function DashboardLayout({
       icon: <Users className="h-5 w-5" />,
     },
     {
-      title: 'Analytics',
-      href: '#',
-      icon: <BarChart3 className="h-5 w-5" />,
-      badge: 'Nouveau',
+      title: "Enseignant Responsable",
+      href: professeurs.index().url,
+      icon: <Users className="h-5 w-5" />,
+      badge: 'Nv',
+    },
+    {
+      title: "Personnel Enseignant",
+      href: professeurs.index().url,
+      icon: <Users className="h-5 w-5" />,
+      badge: 'Nv',
     },
     {
       title: 'Classes',
@@ -111,10 +118,11 @@ export function DashboardLayout({
       title: 'Élèves',
       href: eleves.index().url,
       icon: <UserCog className="h-5 w-5" />,
-    },{
+    }, {
       title: 'Responsables',
       href: '/responsables',
       icon: <Users className="h-5 w-5" />,
+      badge: 'Nv',
     },
     {
       title: 'Configurations de frais',
@@ -142,9 +150,9 @@ export function DashboardLayout({
       icon: <Shield className="h-5 w-5" />,
     },
     {
-      title : 'Budgets',
-      href : budgets.index().url,
-      icon : <DollarSign className="h-5 w-5" />,
+      title: 'Budgets',
+      href: budgets.index().url,
+      icon: <DollarSign className="h-5 w-5" />,
     },
     {
       title: 'Categories Depenses',
@@ -193,7 +201,7 @@ export function DashboardLayout({
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[380px]">
-            <div className="flex flex-col h-100%">  
+            <div className="flex flex-col h-100%">
               <div className="flex h-26 items-center border-b p-6">
                 <Link href="/" className="flex items-center gap-2 p-2">
                   <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
@@ -260,12 +268,13 @@ export function DashboardLayout({
         {/* Sidebar */}
         <aside
           className={cn(
-            "flex flex-col border-r bg-background transition-all duration-300",
+            "flex flex-col border-r bg-background transition-all duration-300 min-h-0",
             sidebarCollapsed ? "w-16" : "w-64"
           )}
         >
+
           {/* Sidebar Header */}
-          <div className="flex h-36 items-center border-b px-4 p-4">
+          <div className="flex h-16 items-center border-b px-4">
             <Link
               href="/"
               className={cn(
@@ -283,7 +292,8 @@ export function DashboardLayout({
           </div>
 
           {/* Sidebar Content */}
-          <ScrollArea className="flex-1 py-4">
+          <ScrollArea className="flex-1 h-full py-4 overflow-y-auto">
+
             {/* Main Navigation */}
             <nav className="px-3 space-y-1">
               {mainNavItems.map((item) => (
@@ -395,7 +405,7 @@ export function DashboardLayout({
   );
 }
 
-function DesktopUserDropdown({user} : {user?: any}) {
+function DesktopUserDropdown({ user }: { user?: any }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -439,7 +449,7 @@ function DesktopUserDropdown({user} : {user?: any}) {
   );
 }
 
-function MobileUserDropdown({user}: {user?: any}) {
+function MobileUserDropdown({ user }: { user?: any }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

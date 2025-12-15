@@ -375,10 +375,10 @@ private function getSoldeInitial($dateMin)
             'search' => $search,
             'date_export' => now()->format('d/m/Y H:i'),
             'entete' => [
-                'nom_ecole' => 'École Excellence',
-                'adresse' => 'Avenue de la République, BP 1234 Lomé - Togo',
-                'telephone' => '(+228) 22 21 21 21',
-                'email' => 'contact@excellence.tg',
+                'nom_ecole' => 'Complexe Scolaire Bokeleale' ,
+                'adresse' => 'AV, De la Science N°5, Kinshasa gombe',
+                'telephone' => '(+243) 815092328',
+                'email' => 'contact@bokeleale.tg',
             ],
         ];
 

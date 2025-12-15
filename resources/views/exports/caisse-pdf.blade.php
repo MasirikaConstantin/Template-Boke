@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>Journal de Caisse</title>
@@ -8,117 +9,117 @@
             margin: 20mm;
             size: A4 portrait;
         }
-        
+
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
             font-size: 11pt;
             line-height: 1.4;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 20px;
             border-bottom: 3px double #1a237e;
             padding-bottom: 15px;
         }
-        
+
         .school-name {
             font-size: 18pt;
             font-weight: bold;
             color: #1a237e;
             margin-bottom: 5px;
         }
-        
+
         .school-details {
             font-size: 9pt;
             color: #666;
         }
-        
+
         .title {
-            font-size: 16pt;
+            font-size: 14pt;
             font-weight: bold;
             text-align: center;
-            margin: 20px 0;
-            padding: 10px;
+            margin: 15px 0;
+            padding: 6px;
             background-color: #f0f0f0;
             border-radius: 5px;
         }
-        
+
         .period {
             text-align: center;
             font-size: 11pt;
             margin-bottom: 15px;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
-        
+
         th {
-            background-color: #1a237e;
+            background-color: #454c97;
             color: white;
-            padding: 8px;
+            padding: 4px;
             text-align: left;
             font-weight: bold;
             border: 1px solid #ddd;
         }
-        
+
         td {
-            padding: 6px;
+            padding: 3px;
             border: 1px solid #ddd;
             vertical-align: top;
         }
-        
+
         .entree {
             background-color: #e8f5e9;
         }
-        
+
         .sortie {
             background-color: #ffebee;
         }
-        
+
         .montant {
             text-align: right;
             font-weight: bold;
         }
-        
+
         .entree .montant {
             color: #2e7d32;
         }
-        
+
         .sortie .montant {
             color: #c62828;
         }
-        
+
         .stats {
             margin-top: 30px;
-            padding: 15px;
+            padding: 5px;
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 5px;
+            gap: 2px;
         }
-        
+
         .stat-item {
             display: flex;
             justify-content: space-between;
             padding: 4px 0;
             border-bottom: 1px solid #eee;
         }
-        
-        
-        
+
+
+
         .stat-value {
             font-weight: bold;
         }
-        
+
         .footer {
             margin-top: 30px;
             padding-top: 10px;
@@ -127,19 +128,54 @@
             color: #666;
             text-align: center;
         }
-        
+
         .page-break {
             page-break-before: always;
         }
-        
+
         .no-data {
             text-align: center;
             padding: 30px;
             color: #999;
             font-style: italic;
         }
+
+        .signature {
+    width: 100%;
+    margin-top: 30px;
+    border-collapse: collapse;
+}
+
+.signature td {
+    border: none;
+    padding-top: 20px;
+    vertical-align: top;
+}
+
+/* Alignements */
+.signature td.left {
+    text-align: left;
+}
+
+.signature td.right {
+    text-align: right;
+}
+
+/* Ligne au-dessus de la signature */
+.signature .line {
+    width: 200px;
+    border-top: 1px solid #000;
+    margin-bottom: 5px;
+}
+
+/* Ajustement ligne selon alignement */
+.signature td.right .line {
+    margin-left: auto;
+}
+
     </style>
 </head>
+
 <body>
     <!-- En-tête -->
     <div class="header">
@@ -152,17 +188,17 @@
 
     <!-- Titre -->
     <div class="title">JOURNAL DE CAISSE</div>
-    
+
     <!-- Période -->
     <div class="period">
         Période du {{ $date_debut }} au {{ $date_fin }}
-        @if($search)
-        <br><small>Filtre de recherche: "{{ $search }}"</small>
+        @if ($search)
+            <br><small>Filtre de recherche: "{{ $search }}"</small>
         @endif
     </div>
 
     <!-- Tableau des mouvements -->
-    @if(count($mouvements) > 0)
+    @if (count($mouvements) > 0)
         <table>
             <thead>
                 <tr>
@@ -174,12 +210,12 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($mouvements as $mouvement)
+                @foreach ($mouvements as $mouvement)
                     <tr class="{{ strtolower($mouvement['type']) }}">
                         <td>{{ \Carbon\Carbon::parse($mouvement['date'])->format('d/m/Y') }}</td>
                         <td>{{ $mouvement['type'] }}</td>
                         <td>{{ $mouvement['description'] ?? '' }}</td>
-                        
+
                         <td>{{ $mouvement['mode_paiement'] }}</td>
                         <td class="montant">
                             {{ number_format($mouvement['montant'], 2, ',', ' ') }} $
@@ -232,6 +268,18 @@
             </div>
         </div>
     </div>
+    <table class="signature">
+        <tr>
+            <td class="left">
+                <div class="line"></div>
+                <div class="stat-value">Signature du Caissier</div>
+            </td>
+            <td class="right">
+                <div class="line"></div>
+                <div class="stat-value">Signature du Responsable</div>
+            </td>
+        </tr>
+    </table>
 
 
     <!-- Pied de page -->
@@ -241,4 +289,5 @@
         Page 1 sur 1
     </div>
 </body>
+
 </html>

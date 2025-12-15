@@ -321,61 +321,7 @@ export default function DepensesIndex({
                 </div>
               </div>
 
-              <div className="flex gap-2 flex-wrap">
-                <Select
-                  value={filters.budget_id || ''}
-                  onValueChange={(value) => handleFilterChange('budget_id', value)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <Wallet className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Budget" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous budgets</SelectItem>
-                    {budgets.map((budget) => (
-                      <SelectItem key={budget.id} value={budget.id.toString()}>
-                        {budget.annee} - {budget.mois}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={filters.categorie_id || ''}
-                  onValueChange={(value) => handleFilterChange('categorie_id', value)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <Folder className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Catégorie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes catégories</SelectItem>
-                    {categories.map((categorie) => (
-                      <SelectItem key={categorie.id} value={categorie.id.toString()}>
-                        {categorie.nom_categorie}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={filters.statut || ''}
-                  onValueChange={(value) => handleFilterChange('statut', value)}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous statuts</SelectItem>
-                    <SelectItem value="brouillon">Brouillon</SelectItem>
-                    <SelectItem value="en_attente">En attente</SelectItem>
-                    <SelectItem value="approuve">Approuvé</SelectItem>
-                    <SelectItem value="rejete">Rejeté</SelectItem>
-                    <SelectItem value="paye">Payé</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
