@@ -524,7 +524,8 @@ export default function DepenseCreate({
 
                     {selectedBudget.montant_restant < data.montant && (
                       <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg">
-                        ⚠️ Le montant dépasse le budget restant
+                        <p>⚠️ Le montant dépasse le budget restant</p>
+                        <p className='pt-3 font-bold'>⚠️ Vous êtez en depassement budgetaire veillez aussi bien le decrire </p>
                       </div>
                     )}
 

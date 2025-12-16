@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use App\Models\Budget;
+use App\Models\Depense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -115,30 +116,56 @@ class BudgetController extends Controller
 
     public function show(Budget $budget)
     {
-        $budget->load(['depenses.categorie', 'depenses.user']);
-        
-        $stats = [
-            'total_depenses' => $budget->depenses->count(),
-            'total_montant_depenses' => $budget->depenses->sum('montant'),
-            'depenses_par_categorie' => $budget->depenses->groupBy('categorie.nom_categorie')
-                ->map(function ($depenses) {
-                    return [
-                        'count' => $depenses->count(),
-                        'total' => $depenses->sum('montant'),
-                    ];
-                }),
-            'depenses_par_statut' => $budget->depenses->groupBy('statut')
-                ->map(function ($depenses) {
-                    return [
-                        'count' => $depenses->count(),
-                        'total' => $depenses->sum('montant'),
-                    ];
-                }),
-        ];
+        // Charger les dépenses liées à ce budget
+        $depenses = Depense::where('budget_id', $budget->id)
+            ->with(['user', 'categorieDepense'])
+            ->get();
+
+        // Calculer les statistiques par catégorie
+        $parCategorie = Depense::where('budget_id', $budget->id)
+            ->select([
+                'categorie_depense_id',
+                DB::raw('categories_depenses.nom_categorie as categorie'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(montant) as montant')
+            ])
+            ->leftJoin('categories_depenses', 'depenses.categorie_depense_id', '=', 'categories_depenses.id')
+            ->groupBy('categorie_depense_id', 'categories_depenses.nom_categorie')
+            ->get()
+            ->map(function ($item) use ($budget) {
+                $item->pourcentage = $budget->montant_depense > 0 
+                    ? ($item->montant / $budget->montant_depense) * 100 
+                    : 0;
+                return $item;
+            });
+
+        // Calculer les statistiques par statut
+        $parStatut = Depense::where('budget_id', $budget->id)
+            ->select([
+                'statut',
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(montant) as montant')
+            ])
+            ->groupBy('statut')
+            ->get();
+
+        // Dépenses récentes (5 dernières)
+        $recentes = Depense::where('budget_id', $budget->id)
+            ->with(['user', 'categorieDepense'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
         return Inertia::render('Budgets/Show', [
             'budget' => $budget,
-            'stats' => $stats,
+            'depenses' => [
+                'data' => $depenses,
+                'total' => $depenses->count(),
+                'par_categorie' => $parCategorie,
+                'par_statut' => $parStatut,
+                'recentes' => $recentes,
+            ],
+            'flash' => session('flash', [])
         ]);
     }
 

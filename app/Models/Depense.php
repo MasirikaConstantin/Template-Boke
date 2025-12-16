@@ -41,25 +41,6 @@ class Depense extends Model
             $depense->ref = (string) \Illuminate\Support\Str::uuid();
         });
 
-        static::saved(function ($depense) {
-            // Mettre à jour le montant dépensé du budget
-            if ($depense->budget) {
-                $depense->budget->montant_depense = $depense->budget->depenses()
-                    ->where('statut', 'paye')
-                    ->sum('montant');
-                $depense->budget->save();
-            }
-        });
-
-        static::deleted(function ($depense) {
-            // Mettre à jour le montant dépensé du budget
-            if ($depense->budget) {
-                $depense->budget->montant_depense = $depense->budget->depenses()
-                    ->where('statut', 'paye')
-                    ->sum('montant');
-                $depense->budget->save();
-            }
-        });
     }
 
     public function budget(): BelongsTo
@@ -71,6 +52,11 @@ class Depense extends Model
     {
         return $this->belongsTo(CategorieDepense::class, 'categorie_depense_id');
     }
+    public function categorieDepense(): BelongsTo
+    {
+        return $this->belongsTo(CategorieDepense::class, 'categorie_depense_id');
+    }
+    
 
     public function user(): BelongsTo
     {

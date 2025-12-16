@@ -361,11 +361,11 @@ class DepenseController extends Controller
             // Mettre à jour le statut de la dépense
             $depense->update(['statut' => $request->decision]);
 
-            // Si approuvé et que le statut devient "paye", mettre à jour le budget
-            if ($request->decision === 'approuve' && $depense->statut === 'paye') {
+            /*/ Si approuvé et que le statut devient "paye", mettre à jour le budget
+            if ($request->decision === 'approuve') {
                 $depense->budget->montant_depense += $depense->montant;
                 $depense->budget->save();
-            }
+            }*/
 
             DB::commit();
 
@@ -387,11 +387,11 @@ class DepenseController extends Controller
             $budget = $depense->budget;
             $montant_restant = $budget->montant_alloue - $budget->montant_depense;
             
-            if ($montant_restant < $depense->montant) {
+            /*if ($montant_restant < $depense->montant) {
                 return back()->withErrors([
                     'error' => 'Le budget ne dispose que de ' . number_format($montant_restant, 2) . ' restants. Montant insuffisant.'
                 ]);
-            }
+            }*/
 
             // Mettre à jour le statut
             $depense->update(['statut' => 'paye']);

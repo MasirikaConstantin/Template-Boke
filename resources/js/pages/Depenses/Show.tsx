@@ -238,7 +238,7 @@ export default function DepenseShow({ auth, depense }: DepenseShowProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatutBadge(depense.statut)}
-                          {depense.statut === 'en_attente' && (
+                          {(depense.statut === 'en_attente' || depense.statut === 'brouillon') && (
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
