@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Mail\RecouvrementPaiementMail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 use Illuminate\Support\Str;
 
@@ -221,33 +224,33 @@ class RecouvrementController extends Controller
         }
 
         $dettes = $eleves->map(function ($eleve) use ($tranche) {
-    $montant_paye = $eleve->montant_paye ?? 0;
-    $montant_du = $tranche->montant;
-    $reste_a_payer = max(0, $montant_du - $montant_paye);
-    $pourcentage_paye = $montant_du > 0 ? ($montant_paye / $montant_du) * 100 : 0;
+            $montant_paye = $eleve->montant_paye ?? 0;
+            $montant_du = $tranche->montant;
+            $reste_a_payer = max(0, $montant_du - $montant_paye);
+            $pourcentage_paye = $montant_du > 0 ? ($montant_paye / $montant_du) * 100 : 0;
 
-    $statut = $this->getStatutDette($reste_a_payer, $tranche->date_limite);
+            $statut = $this->getStatutDette($reste_a_payer, $tranche->date_limite);
 
-    return [
-        'id' => $eleve->id,
-        'nom_complet' => $eleve->nom . ' ' . $eleve->prenom,
-        'nom' => $eleve->nom,
-        'prenom' => $eleve->prenom,
-        'ref' => $eleve->ref,
-        'classe' => $eleve->classe ? $eleve->classe->nom_classe : 'Non assigné',
-        'montant_total' => $montant_du,
-        'montant_paye' => $montant_paye,
-        'reste_a_payer' => $reste_a_payer,
-        'pourcentage_paye' => $pourcentage_paye,
-        'est_regle' => $reste_a_payer <= 0,
-        'date_dernier_paiement' => $eleve->date_dernier_paiement,
-        'jours_restants' => Carbon::parse($tranche->date_limite)->diffInDays(now(), false) * -1,
+            return [
+                'id' => $eleve->id,
+                'nom_complet' => $eleve->nom . ' ' . $eleve->prenom,
+                'nom' => $eleve->nom,
+                'prenom' => $eleve->prenom,
+                'ref' => $eleve->ref,
+                'classe' => $eleve->classe ? $eleve->classe->nom_classe : 'Non assigné',
+                'montant_total' => $montant_du,
+                'montant_paye' => $montant_paye,
+                'reste_a_payer' => $reste_a_payer,
+                'pourcentage_paye' => $pourcentage_paye,
+                'est_regle' => $reste_a_payer <= 0,
+                'date_dernier_paiement' => $eleve->date_dernier_paiement,
+                'jours_restants' => Carbon::parse($tranche->date_limite)->diffInDays(now(), false) * -1,
 
-        // Ajouts nécessaires :
-        'statut_code' => $statut['code'],     // EX: "regle", "urgent", "retard"
-        'statut_label' => $statut['label'],   // EX: "Réglé", "En retard", etc.
-    ];
-});
+                // Ajouts nécessaires :
+                'statut_code' => $statut['code'],     // EX: "regle", "urgent", "retard"
+                'statut_label' => $statut['label'],   // EX: "Réglé", "En retard", etc.
+            ];
+        });
 
 
         // Filtrer par statut si spécifié
@@ -304,26 +307,55 @@ class RecouvrementController extends Controller
 
     public function envoyerRappels(Request $request)
     {
-        $request->validate([
+
+        $validated = $request->validate([
             'tranche_id' => 'required|exists:tranches,id',
-            'eleve_ids' => 'required|array',
+            'dettes' => 'required|array|min:1',
+
+            'dettes.*.id' => 'required|integer',
+            'dettes.*.tranche_id' => 'required|integer',
+            'dettes.*.reste_a_payer' => 'required|numeric|min:1',
+            'dettes.*.montant_paye' => 'required|numeric|min:0',
+            'dettes.*.statut.code' => 'required|string',
+
             'message' => 'nullable|string',
         ]);
+        $tranche = Tranche::with('configuration_frais')->findOrFail($validated['tranche_id']);
 
-        $tranche = Tranche::with('configuration_frais')->find($request->tranche_id);
-        $eleves = Eleve::whereIn('id', $request->eleve_ids)->get();
+        foreach ($validated['dettes'] as $detteData) {
+            // Sécurité : on recharge l’élève depuis la DB
+            $eleve = Eleve::find($detteData['id']);
+            $eleve->load('responsablesPrincipale');
+            if (!$eleve) {
+                continue;
+            }
 
-        foreach ($eleves as $eleve) {
-            // Logique d'envoi de notification (email, SMS, etc.)
-            // Vous pouvez utiliser Laravel Notifications ou un service tiers
-            $this->envoyerRappel($eleve, $tranche, $request->message);
+            // (Optionnel) Vérifier que la dette correspond bien à la tranche
+            if ((int) $detteData['tranche_id'] !== $tranche->id) {
+                continue;
+            }
+
+            // Envoi du rappel avec données spécifiques à CET élève
+            $this->envoyerRappel(
+                eleve: $eleve,
+                tranche: $tranche,
+                montantPaye: $detteData['montant_paye'],
+                resteAPayer: $detteData['reste_a_payer'],
+                statut: $detteData['statut']['code'],
+                message: $validated['message'] ?? null
+            );
         }
-
-        return back()->with('success', 'Rappels envoyés avec succès à ' . count($eleves) . ' élève(s).');
+        return back()->with('success', 'Rappels envoyés avec succès à ' . count($validated['dettes']) . ' élève(s).');
     }
 
-    private function envoyerRappel($eleve, $tranche, $messagePersonnalise = null)
-    {
+    private function envoyerRappel(
+        $eleve,
+        $tranche,
+        float $montantPaye,
+        float $resteAPayer,
+        string $statut,
+        ?string $message = null
+    ) {
         // Logique d'envoi de rappel
         // Exemple avec Laravel Mail:
         /*
@@ -333,5 +365,19 @@ class RecouvrementController extends Controller
             $messagePersonnalise
         ));
         */
+
+        try {
+            Mail::to($eleve->responsablesPrincipale->email)
+                ->send(new RecouvrementPaiementMail(
+                    $eleve,
+                    $tranche,
+                    $montantPaye,
+                    $resteAPayer
+                ));
+
+            Log::info('Envoi de rappel pour l\'élève ID: ' . $eleve->responsablesPrincipale->email);
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+        }
     }
 }

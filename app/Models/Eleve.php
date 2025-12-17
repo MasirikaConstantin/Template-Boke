@@ -111,7 +111,7 @@ class Eleve extends Model
             ->orderByPivot('ordre_priorite')
             ->get();
     }
-
+   
     // Méthode pour ajouter un responsable
     public function ajouterResponsable(Responsable $responsable, array $pivotAttributes = [])
     {
@@ -140,6 +140,12 @@ class Eleve extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+     public function responsablesPrincipale()
+    {
+        return $this->hasOne(Responsable::class, 'id', 'responsable_principal_id');
+    }
+          
 
     public function notes(): HasMany
     {

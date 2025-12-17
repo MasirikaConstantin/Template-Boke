@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
@@ -11,6 +12,9 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Mail\PaiementEffectueMail;
+use Illuminate\Support\Facades\Mail;
+
 
 class PaiementController extends Controller
 {
@@ -23,10 +27,10 @@ class PaiementController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('reference', 'like', "%{$search}%")
-                  ->orWhereHas('eleve', function ($q) use ($search) {
-                      $q->where('nom', 'like', "%{$search}%")
-                        ->orWhere('prenom', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('eleve', function ($q) use ($search) {
+                        $q->where('nom', 'like', "%{$search}%")
+                            ->orWhere('prenom', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -171,11 +175,28 @@ class PaiementController extends Controller
 
             DB::commit();
 
+            $eleve = $paiement->eleve;
+
+            // Calculs
+            $totalPaye = Paiement::where('eleve_id', $eleve->id)
+                ->where('tranche_id', $paiement->tranche_id)
+                ->sum('montant');
+
+            $resteAPayer = max(
+                0,
+                $paiement->tranche->montant - $totalPaye
+            );
+
+            // Envoi email aux parents
+            if ($eleve->responsablesPrincipale && $eleve->responsablesPrincipale->email) {
+                Mail::to($eleve->responsablesPrincipale->email)
+                    ->send(new PaiementEffectueMail($paiement, $totalPaye, $resteAPayer));
+            }
+
             return redirect()->route('paiements.show', $paiement->id)
                 ->with('success', 'Paiement enregistré avec succès.');
-
         } catch (\Exception $e) {
-            
+            //dd($e->getMessage());
             DB::rollBack();
             return back()->withErrors(['error' => 'Une erreur est survenue lors de l\'enregistrement.']);
         }
@@ -185,15 +206,33 @@ class PaiementController extends Controller
     {
         $paiement->load(['eleve.classe', 'tranche', 'user', 'historique_paiements.user']);
 
+        $eleve = $paiement->eleve;
+
+        // Paiements du même élève pour la même tranche
+        $paiementsTranche = Paiement::where('eleve_id', $eleve->id)
+            ->where('tranche_id', $paiement->tranche_id)
+            ->get();
+        $totalPaye = $paiementsTranche->sum('montant');
+        $montantTranche = $paiement->tranche->montant;
+
+        $resteAPayer = max(0, $montantTranche - $totalPaye);
+
         return Inertia::render('Paiements/Show', [
             'paiement' => $paiement,
+            'autres' => [
+                'total_paye_tranche' => $totalPaye,
+                'montant_tranche' => $montantTranche,
+                'reste_a_payer' => $resteAPayer,
+                'paiements_tranche' => $paiementsTranche,
+            ]
         ]);
     }
+
 
     public function edit(Paiement $paiement)
     {
         $paiement->load(['eleve', 'tranche']);
-        
+
         $eleves = Eleve::orderBy('nom')->orderBy('prenom')->get();
         $tranches = Tranche::with('configuration_frais')
             ->whereHas('configuration_frais', function ($q) {
@@ -226,7 +265,7 @@ class PaiementController extends Controller
 
         try {
             $ancien = $paiement->toArray();
-            
+
             $paiement->update($validated);
 
             // Enregistrer l'historique
@@ -245,7 +284,6 @@ class PaiementController extends Controller
 
             return redirect()->route('paiements.show', $paiement->id)
                 ->with('success', 'Paiement modifié avec succès.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Une erreur est survenue lors de la modification.']);
@@ -274,7 +312,6 @@ class PaiementController extends Controller
 
             return redirect()->route('paiements.index')
                 ->with('success', 'Paiement annulé avec succès.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Une erreur est survenue lors de l\'annulation.']);

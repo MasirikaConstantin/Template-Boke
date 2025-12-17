@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -79,6 +79,7 @@ interface ResponsableForm {
 }
 
 export default function CreateEleve({ classes, nationalites }: CreateEleveProps) {
+
   const { data, setData, post, processing, errors, reset } = useForm({
     // Identité
     nom: '',
@@ -125,7 +126,6 @@ export default function CreateEleve({ classes, nationalites }: CreateEleveProps)
   });
 
   const [activeTab, setActiveTab] = useState('identite');
-
   // Ajouter un responsable
   const addResponsable = () => {
     setData('responsables', [

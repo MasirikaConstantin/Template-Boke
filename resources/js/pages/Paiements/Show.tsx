@@ -80,9 +80,10 @@ interface Paiement {
 interface PaiementShowProps {
   auth: any;
   paiement: Paiement;
+  autres: any;
 }
 
-export default function PaiementShow({ auth, paiement }: PaiementShowProps) {
+export default function PaiementShow({ auth, paiement,autres }: PaiementShowProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
@@ -478,7 +479,7 @@ export default function PaiementShow({ auth, paiement }: PaiementShowProps) {
           </Tabs>
 
            <div style={{ display: 'none' }}>
-          <PrintPaiementFrais ref={printRef} paiement={paiement} />
+          <PrintPaiementFrais ref={printRef} paiement={paiement} autres={autres} />
         </div>
         </div>
       </DashboardLayout>

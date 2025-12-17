@@ -3,7 +3,7 @@ import React from 'react';
 interface PaiementFraisData {
   id: number;
   reference: string;
-  montant: string;
+  montant: number;
   mode_paiement: string;
   numero_cheque: string | null;
   commentaire: string | null;
@@ -43,16 +43,17 @@ interface PaiementFraisData {
 import writtenNumber from 'written-number';
 interface PrintPaiementFraisProps {
   paiement: PaiementFraisData;
+  autres: any;
 }
 
 const PrintPaiementFrais = React.forwardRef<HTMLDivElement, PrintPaiementFraisProps>(
-  ({ paiement }, ref) => {
+  ({ paiement, autres }, ref) => {
     const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString('fr-FR');
     };
 
-    const formatMontant = (montant: string) => {
-      return parseFloat(montant).toLocaleString('fr-FR', { 
+    const formatMontant = (montant: number) => {
+      return parseFloat(montant.toString()).toLocaleString('fr-FR', { 
         style: 'currency', 
         currency: 'USD',
         minimumFractionDigits: 0
@@ -269,6 +270,20 @@ const PrintPaiementFrais = React.forwardRef<HTMLDivElement, PrintPaiementFraisPr
                   <td style={{ padding: '6px 0', fontWeight: 'bold' }}>Montant tranche:</td>
                   <td style={{ padding: '6px 0' }}>{formatMontant(paiement.tranche.montant)}</td>
                 </tr>
+                <tr>
+                  <td style={{ padding: '6px 0', fontWeight: 'bold' }}>Montant restant:</td>
+                  <td style={{ padding: '6px 0' }}>{formatMontant(autres.reste_a_payer)}</td>
+                </tr>
+                {(Number(autres.montant_tranche) < autres.total_paye_tranche) && (
+                <tr>
+                  <td style={{ padding: '6px 0', fontWeight: 'bold' }}>Montant Avancé:</td>
+                  <td style={{ padding: '6px 0', color: '#856404', fontWeight: 'bold' }}>
+                    {formatMontant(autres.total_paye_tranche - Number(autres.montant_tranche))}
+                  </td>
+                </tr>
+                )
+
+                }
                 <tr>
                   <td style={{ padding: '6px 0', fontWeight: 'bold' }}>Date limite:</td>
                   <td style={{ padding: '6px 0' }}>{formatDate(paiement.tranche.date_limite)}</td>

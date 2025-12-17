@@ -38,6 +38,7 @@ import {
   School,
   DollarSign,
   Percent,
+  Loader2,
 } from 'lucide-react';
 import { DashboardLayout } from '@/layout/DashboardLayout';
 import { PageHeader } from '@/layout/PageHeader';
@@ -92,6 +93,7 @@ interface Dette {
 }
 
 interface RecouvrementPageProps {
+  autre: any;
   auth: any;
   tranches: Tranche[];
   classes: Classe[];
@@ -130,14 +132,13 @@ export default function RecouvrementIndex({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [search, setSearch] = useState('');
   const [showRappelModal, setShowRappelModal] = useState(false);
-
+  const [donnesApi, setdonnesApi] = useState<Dette[]>([]);
   const handleFilterChange = (key: string, value: string) => {
     router.get('/recouvrement', { ...filters, [key]: value }, {
       preserveState: true,
       replace: true,
     });
   };
-
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(dettes.map(dette => dette.id));
@@ -145,63 +146,80 @@ export default function RecouvrementIndex({
       setSelectedIds([]);
     }
   };
+  const [processing, setProcessing] = useState(false);
 
   const handleSelectDette = (id: number, checked: boolean) => {
+    const dette = dettes.find(d => d.id === id);
+    if (!dette) return;
     if (checked) {
       setSelectedIds([...selectedIds, id]);
+      setdonnesApi(prev => [...prev, dette]);
     } else {
       setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
+      setdonnesApi(prev => prev.filter(item => item.id !== id));
     }
   };
 
   const handleGenererRapport = (format: 'pdf' | 'excel', selectionOnly = false) => {
     if (!filters.tranche_id) {
-        alert('Veuillez sélectionner une tranche d\'abord.');
-        return;
+      alert('Veuillez sélectionner une tranche d\'abord.');
+      return;
     }
 
     if (selectionOnly && selectedIds.length === 0) {
-        alert('Veuillez sélectionner au moins un élève.');
-        return;
+      alert('Veuillez sélectionner au moins un élève.');
+      return;
     }
 
     const params = new URLSearchParams({
-        tranche_id: filters.tranche_id,
-        format,
+      tranche_id: filters.tranche_id,
+      format,
     });
 
     if (filters.classe_id !== 'all') {
-        params.append('classe_id', filters.classe_id);
+      params.append('classe_id', filters.classe_id);
     }
 
     if (filters.statut !== 'tous') {
-        params.append('statut', filters.statut);
+      params.append('statut', filters.statut);
     }
 
     if (selectionOnly) {
-        params.append('selection', JSON.stringify(selectedIds));
+      params.append('selection', JSON.stringify(selectedIds));
     }
 
     // Ouvre dans un nouvel onglet !
     window.open(`/recouvrement/generer-rapport?${params.toString()}`, '_blank');
-};
+  };
 
 
   const handleEnvoyerRappels = () => {
-    if (selectedIds.length === 0) return;
+    if (selectedIds.length === 0 || processing) return;
 
-    if (confirm(`Envoyer des rappels à ${selectedIds.length} élève(s) ?`)) {
-      router.post('/recouvrement/envoyer-rappels', {
-        tranche_id: filters.tranche_id,
-        eleve_ids: selectedIds,
-      }, {
-        onSuccess: () => {
-          setSelectedIds([]);
-          setShowRappelModal(false);
-        },
-      });
-    }
+    setProcessing(true);
+
+    router.post('/recouvrement/envoyer-rappels', {
+      tranche_id: filters.tranche_id,
+      eleve_ids: selectedIds,
+      dettes: (donnesApi), // recommandé
+    }, {
+      onSuccess: () => {
+        setProcessing(false);
+        setSelectedIds([]);
+        setShowRappelModal(false);
+      },
+      onError: (e) => {
+        setProcessing(false);
+        setShowRappelModal(false);
+        console.error(e);
+      },
+      onFinish: () => {
+        // sécurité si onError/onSuccess ne passe pas
+        setProcessing(false);
+      },
+    });
   };
+
 
   const formatMontant = (montant: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -314,7 +332,7 @@ export default function RecouvrementIndex({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex justify-between gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tranche</label>
                 <Select
@@ -337,46 +355,48 @@ export default function RecouvrementIndex({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Classe</label>
-                <Select
-                  value={filters.classe_id || ''}
-                  onValueChange={(value) => handleFilterChange('classe_id', value)}
-                  disabled={!filters.tranche_id}
-                >
-                  <SelectTrigger>
-                    <School className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Toutes classes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes classes</SelectItem>
-                    {classes.map((classe) => (
-                      <SelectItem key={classe.id} value={classe.id.toString()}>
-                        {classe.nom_classe}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="flex gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Classe</label>
+                  <Select
+                    value={filters.classe_id || ''}
+                    onValueChange={(value) => handleFilterChange('classe_id', value)}
+                    disabled={!filters.tranche_id}
+                  >
+                    <SelectTrigger>
+                      <School className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Toutes classes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes classes</SelectItem>
+                      {classes.map((classe) => (
+                        <SelectItem key={classe.id} value={classe.id.toString()}>
+                          {classe.nom_classe}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Statut</label>
-                <Select
-                  value={filters.statut || 'tous'}
-                  onValueChange={(value) => handleFilterChange('statut', value)}
-                  disabled={!filters.tranche_id}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tous statuts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tous">Tous statuts</SelectItem>
-                    <SelectItem value="regle">Réglé</SelectItem>
-                    <SelectItem value="en_cours">En cours</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                    <SelectItem value="retard">En retard</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Statut</label>
+                  <Select
+                    value={filters.statut || 'tous'}
+                    onValueChange={(value) => handleFilterChange('statut', value)}
+                    disabled={!filters.tranche_id}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tous statuts" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tous">Tous statuts</SelectItem>
+                      <SelectItem value="regle">Réglé</SelectItem>
+                      <SelectItem value="en_cours">En cours</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="retard">En retard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -389,7 +409,7 @@ export default function RecouvrementIndex({
                       {selectedTranche.configuration_frais?.nom_frais} •
                       Limite: {formatDate(selectedTranche.date_limite)} •
                       {selectedTranche.jours_restants > 0
-                        ? ` ${selectedTranche.jours_restants} jours restants`
+                        ? ` ${Math.ceil(selectedTranche.jours_restants)} jours restants`
                         : ' Échue'}
                     </div>
                   </div>
@@ -503,6 +523,16 @@ export default function RecouvrementIndex({
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
+                  <div className="">
+                    <Button
+                      variant="outline"
+                      disabled={selectedIds.length === 0}
+                      onClick={() => setShowRappelModal(true)}
+                    >
+                      <Bell className="h-4 w-4 mr-2" />
+                      Envoyer des rappels ({selectedIds.length})
+                    </Button>
+                  </div>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -550,7 +580,9 @@ export default function RecouvrementIndex({
                       </TableRow>
                     ) : (
                       dettesFiltrees.map((dette) => (
+
                         <TableRow key={dette.id} className="hover:bg-muted/50">
+
                           <TableCell>
                             <Checkbox
                               checked={selectedIds.includes(dette.id)}
@@ -572,7 +604,7 @@ export default function RecouvrementIndex({
                               <div>
                                 <div className="font-medium">{dette.classe.nom}</div>
                                 <div className="text-xs text-muted-foreground">
-                                  {dette.classe.complet}
+                                  {dette.classe.nom_classe}
                                 </div>
                               </div>
                             ) : (
@@ -634,7 +666,7 @@ export default function RecouvrementIndex({
                               }`}>
                               {dette.jours_restants < 0
                                 ? `${Math.abs(dette.jours_restants)}j de retard`
-                                : `${dette.jours_restants}j restants`
+                                : `${Math.ceil(dette.jours_restants)}j restants`
                               }
                             </div>
                           </TableCell>
@@ -680,13 +712,6 @@ export default function RecouvrementIndex({
                 Vous allez envoyer des rappels de paiement à {selectedIds.length} élève(s).
               </p>
               <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Message personnalisé (optionnel)</label>
-                  <textarea
-                    className="w-full min-h-[100px] border rounded-lg p-3 text-sm"
-                    placeholder="Ajoutez un message personnalisé pour les parents..."
-                  />
-                </div>
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
@@ -694,10 +719,24 @@ export default function RecouvrementIndex({
                   >
                     Annuler
                   </Button>
-                  <Button onClick={handleEnvoyerRappels}>
-                    <Mail className="h-4 w-4 mr-2" />
-                    Envoyer les rappels
+                  <Button
+                    onClick={handleEnvoyerRappels}
+                    disabled={processing}
+                    className="flex items-center gap-2"
+                  >
+                    {processing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Envoi en cours...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        Envoyer les rappels
+                      </>
+                    )}
                   </Button>
+
                 </div>
               </div>
             </div>
