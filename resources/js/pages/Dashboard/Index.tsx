@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/layout/DashboardLayout';
 import { PageHeader } from '@/layout/PageHeader';
 import DashboardActivity from './DashboardActivity';
+import AdminDashboard from './Admin';
 
 interface DashboardProps {
   activeRoute?: string;
@@ -25,12 +26,14 @@ export default function Dashboard({ activeRoute = '/dashboard', stats }: Dashboa
           </Button>
         }
       />
+      <AdminDashboard/>
       
       {/* Contenu du dashboard */}
       <div className="">
         {/* Cartes de statistiques */}
         <DashboardActivity/>
       </div>
+
     </DashboardLayout>
   );
 }
