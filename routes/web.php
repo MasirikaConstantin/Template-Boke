@@ -206,7 +206,9 @@ Route::resource('presences', PresenceController::class)->except(['show']);
 
 
 
-
+Route::get('eleve-presence', function () {
+    return Inertia::render('PresencesEleves/Index');
+})->name('eleve-presence.index')->middleware('auth');
 
 
 

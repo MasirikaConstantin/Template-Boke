@@ -38,6 +38,7 @@ import {
   DollarSign,
   BookCheckIcon,
   BookAIcon,
+  Clock10,
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Link, usePage } from '@inertiajs/react';
@@ -53,6 +54,7 @@ import depenses from '@/routes/depenses';
 import categoriesDepense from '@/routes/categories-depense';
 import caisse from '@/routes/caisse';
 import professeurs from '@/routes/professeurs';
+import elevePresence from '@/routes/eleve-presence';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -101,6 +103,12 @@ export function DashboardLayout({
       title: "Enseignant Responsable",
       href: professeurs.index().url,
       icon: <Users className="h-5 w-5" />,
+      badge: 'Nv',
+    },
+    {
+      title: "Presence Éleve",
+      href: elevePresence.index().url,
+      icon: <Clock10 className="h-5 w-5" />,
       badge: 'Nv',
     },
     {
