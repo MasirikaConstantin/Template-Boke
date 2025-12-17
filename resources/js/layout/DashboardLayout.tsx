@@ -39,6 +39,7 @@ import {
   BookCheckIcon,
   BookAIcon,
   Clock10,
+  UserCircle2Icon,
 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Link, usePage } from '@inertiajs/react';
@@ -55,6 +56,8 @@ import categoriesDepense from '@/routes/categories-depense';
 import caisse from '@/routes/caisse';
 import professeurs from '@/routes/professeurs';
 import elevePresence from '@/routes/eleve-presence';
+import { es } from 'date-fns/locale';
+import espaceParent from '@/routes/espace-parent';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -115,6 +118,12 @@ export function DashboardLayout({
       title: "Personnel Enseignant",
       href: professeurs.index().url,
       icon: <Users className="h-5 w-5" />,
+      badge: 'Nv',
+    },
+    {
+      title: "Espace Parent",
+      href: espaceParent.index().url,
+      icon: <UserCircle2Icon className="h-5 w-5" />,
       badge: 'Nv',
     },
     {

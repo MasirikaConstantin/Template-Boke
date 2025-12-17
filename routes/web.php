@@ -14,6 +14,7 @@ use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\EleveController;
 use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\PaiementSalaireController;
+use App\Http\Controllers\ParentController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ProfSalaireController;
 use App\Http\Controllers\RecouvrementController;
@@ -211,8 +212,27 @@ Route::get('eleve-presence', function () {
 })->name('eleve-presence.index')->middleware('auth');
 
 
+Route::get('espace-parent', function () {
+    return Inertia::render('EspaceParents/Index');
+})->name('espace-parent.index')->middleware('auth');
 
 
+
+// routes/web.php
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('parent')->name('parent.')->group(function () {
+        Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/enfants', [ParentController::class, 'enfants'])->name('enfants');
+        Route::get('/notes', [ParentController::class, 'notes'])->name('notes');
+        Route::get('/presences', [ParentController::class, 'presences'])->name('presences');
+        Route::get('/bulletins', [ParentController::class, 'bulletins'])->name('bulletins');
+        Route::get('/communications', [ParentController::class, 'communications'])->name('communications');
+        Route::get('/finances', [ParentController::class, 'finances'])->name('finances');
+        Route::post('/envoyer-message', [ParentController::class, 'envoyerMessage'])->name('envoyer-message');
+        Route::post('/justifier-absence', [ParentController::class, 'justifierAbsence'])->name('justifier-absence');
+        Route::get('/telecharger-bulletin/{bulletin}', [ParentController::class, 'telechargerBulletin'])->name('telecharger-bulletin');
+    });
+});
 
 
 
